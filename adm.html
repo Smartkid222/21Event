@@ -23,7 +23,6 @@
         --success: #10b981;
         --danger: #ef4444;
         --glass: blur(12px);
-        /* Fixed syntax error here: removed extra comma in rgba */
         --shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
         --gradient: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
       }
@@ -32,6 +31,7 @@
         padding: 0;
         box-sizing: border-box;
         font-family: "Inter", sans-serif;
+        -webkit-tap-highlight-color: transparent;
       }
       body {
         background-color: var(--bg-dark);
@@ -52,7 +52,7 @@
       .container {
         max-width: 1200px;
         margin: 0 auto;
-        padding: 40px 0;
+        padding: 40px 20px;
         animation: fadeIn 0.4s ease;
       }
       @keyframes fadeIn {
@@ -78,6 +78,7 @@
         font-size: 0.95rem;
         display: inline-flex;
         align-items: center;
+        justify-content: center;
         gap: 8px;
       }
       .btn-primary {
@@ -112,8 +113,19 @@
         padding: 24px;
         box-shadow: var(--shadow);
       }
+
+      /* Table Styles */
+      .table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch; /* Smooth scroll on iOS */
+        width: 100%;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+      }
+
       table {
         width: 100%;
+        min-width: 800px; /* Forces horizontal scroll on mobile */
         border-collapse: collapse;
         margin-top: 20px;
       }
@@ -122,6 +134,7 @@
         text-align: left;
         padding: 16px;
         border-bottom: 1px solid var(--border);
+        white-space: nowrap; /* Prevent text wrapping inside cells */
       }
       th {
         color: var(--text-muted);
@@ -145,6 +158,7 @@
         cursor: pointer;
         display: inline-block;
         transition: all 0.2s;
+        min-width: 100px;
       }
       .masked-acct-btn:hover {
         background: rgba(255, 255, 255, 0.2);
@@ -183,6 +197,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
+        padding: 20px;
       }
       input {
         width: 100%;
@@ -192,6 +207,7 @@
         border-radius: 8px;
         color: white;
         margin-bottom: 16px;
+        font-size: 1rem;
       }
       #toast-container {
         position: fixed;
@@ -211,6 +227,7 @@
         display: flex;
         align-items: center;
         gap: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
       }
       @keyframes slideIn {
         from {
@@ -222,12 +239,66 @@
           opacity: 1;
         }
       }
+
+      /* -----------------------------------------------------------
+           5. MOBILE RESPONSIVE STYLES
+        ----------------------------------------------------------- */
+      @media (max-width: 768px) {
+        .container {
+          padding: 20px 10px;
+        }
+
+        /* Login Card */
+        .login-screen .card {
+          width: 100%;
+          max-width: 400px;
+        }
+
+        /* Header Stack */
+        header .container {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 15px;
+        }
+        header .btn {
+          width: 100%;
+        }
+
+        /* Stats Grid: 4 cols -> 2 cols */
+        div[style*="grid-template-columns: repeat(4"] {
+          grid-template-columns: 1fr 1fr !important;
+          gap: 12px;
+        }
+
+        .card h1 {
+          font-size: 1.5rem;
+        }
+        .card h3 {
+          font-size: 0.9rem;
+        }
+
+        /* Adjust Card padding for smaller screens */
+        .card {
+          padding: 16px;
+        }
+
+        /* Toast positioning */
+        #toast-container {
+          bottom: 20px;
+          left: 20px;
+          right: 20px;
+        }
+        .toast {
+          width: 100%;
+          justify-content: center;
+        }
+      }
     </style>
   </head>
   <body>
     <!-- Login Gate -->
     <div id="loginGate" class="login-screen">
-      <div class="card" style="width: 350px">
+      <div class="card">
         <h2 style="text-align: center; margin-bottom: 20px">Admin Access</h2>
         <form onsubmit="app.auth.login(event)">
           <input
@@ -320,54 +391,70 @@
         </div>
 
         <!-- PAYOUT REQUESTS SECTION -->
-        <div class="card" style="margin-bottom: 40px">
-          <h3>Payout Requests</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>Organizer</th>
-                <th>Bank Name</th>
-                <th>Account Number</th>
-                <th>Amount</th>
-                <th>Date</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody id="withdrawalsTableBody"></tbody>
-          </table>
+        <div
+          class="card"
+          style="margin-bottom: 40px; padding: 0; overflow: hidden"
+        >
+          <!-- Wrapper for scrollable table -->
+          <div style="padding: 24px 24px 0 24px">
+            <h3>Payout Requests</h3>
+          </div>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Organizer</th>
+                  <th>Bank Name</th>
+                  <th>Account Number</th>
+                  <th>Amount</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="withdrawalsTableBody"></tbody>
+            </table>
+          </div>
         </div>
 
         <!-- SYSTEM TABLES -->
-        <div class="card">
-          <h3>All Events System-Wide</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>Event</th>
-                <th>Organizer ID</th>
-                <th>Gross Sales</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody id="eventsTable"></tbody>
-          </table>
+        <div class="card" style="padding: 0; overflow: hidden">
+          <div style="padding: 24px 24px 0 24px">
+            <h3>All Events System-Wide</h3>
+          </div>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Event</th>
+                  <th>Organizer ID</th>
+                  <th>Gross Sales</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="eventsTable"></tbody>
+            </table>
+          </div>
         </div>
 
-        <div class="card">
-          <h3>User Management</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody id="usersTable"></tbody>
-          </table>
+        <div class="card" style="padding: 0; overflow: hidden">
+          <div style="padding: 24px 24px 0 24px">
+            <h3>User Management</h3>
+          </div>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="usersTable"></tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -471,6 +558,7 @@
                   // Create Masked Button
                   const maskedBtn = `<button class="masked-acct-btn" onclick="app.ui.toggleDetails('${w.id}')">**** ${w.accountNum.slice(-4)}</button>`;
 
+                  // FIX: Changed colspan to 7 to match the table headers
                   return `
                         <tr>
                             <td>${orgName}</td>
@@ -489,7 +577,7 @@
                         </tr>
                         <!-- Reveal Details Row (Hidden by default) -->
                         <tr class="details-row" id="details-${w.id}">
-                            <td colspan="4" style="color:var(--text-muted); padding-left:12px;">
+                            <td colspan="7" style="color:var(--text-muted); padding-left:12px;">
                                 <strong>Full Account Details:</strong><br>
                                 <span style="color:white; font-weight:600;">${w.accountNum}</span>
                             </td>

@@ -31,6 +31,7 @@
         padding: 0;
         box-sizing: border-box;
         font-family: "Inter", sans-serif;
+        -webkit-tap-highlight-color: transparent;
       }
       body {
         background-color: var(--bg-dark);
@@ -79,6 +80,7 @@
         font-size: 0.95rem;
         display: inline-flex;
         align-items: center;
+        justify-content: center;
         gap: 8px;
       }
       .btn-primary {
@@ -368,6 +370,131 @@
         margin-top: 16px;
         border-left: 3px solid var(--accent);
       }
+
+      /* -----------------------------------------------------------
+           5. MOBILE RESPONSIVE STYLES
+        ----------------------------------------------------------- */
+      @media (max-width: 768px) {
+        /* Container Padding */
+        .container {
+          padding: 20px 10px;
+        }
+
+        /* Header Layout */
+        header nav {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 15px;
+          text-align: center;
+        }
+
+        header nav h1 {
+          font-size: 1.5rem;
+        }
+
+        .nav-actions {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          width: 100%;
+        }
+
+        .nav-actions button {
+          width: 100%;
+        }
+
+        /* Stats Grid: 4 cols -> 2 cols */
+        div[style*="grid-template-columns: repeat(4, 1fr)"] {
+          grid-template-columns: 1fr 1fr !important;
+          gap: 12px;
+        }
+
+        /* Stats Card Typography */
+        .balance-amount {
+          font-size: 1.8rem;
+        }
+        .card h1 {
+          font-size: 1.5rem;
+        }
+
+        /* Table: Horizontal Scroll */
+        .table-container {
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch; /* smooth scroll on iOS */
+          border-radius: 8px;
+          border: 1px solid var(--border);
+        }
+
+        table {
+          min-width: 600px; /* Force scroll */
+          margin-top: 0;
+        }
+
+        th,
+        td {
+          padding: 12px;
+          white-space: nowrap; /* Prevent text wrapping */
+        }
+
+        /* Modals */
+        .modal {
+          width: 95%;
+          max-height: 85vh;
+          border-radius: 16px;
+        }
+
+        /* Scanner Adjustments */
+        .scanner-viewport {
+          height: 300px;
+        }
+        .scan-result {
+          font-size: 1rem;
+        }
+
+        /* Forms in Modals */
+        /* Create Event: Date & Category Stack */
+        .form-group + .form-group {
+          /* Specific targeting for the grid inside Create Event form */
+          display: block;
+        }
+
+        /* Ticket Type Rows: Stack inputs instead of 3 columns */
+        .ticket-type-row .row-content {
+          grid-template-columns: 1fr !important;
+          gap: 12px;
+          margin-top: 30px; /* Space for the remove button */
+        }
+
+        .remove-ticket-btn {
+          top: -10px;
+          right: -5px;
+          z-index: 5;
+          width: 28px;
+          height: 28px;
+        }
+
+        /* Withdrawal Item Layout */
+        .withdrawal-item {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 8px;
+        }
+
+        .withdrawal-item .badge {
+          align-self: flex-end;
+        }
+
+        /* Toast Position */
+        #toast-container {
+          bottom: 20px;
+          left: 20px;
+          right: 20px;
+        }
+        .toast {
+          width: 100%;
+          justify-content: center;
+        }
+      }
     </style>
   </head>
   <body>
@@ -405,11 +532,11 @@
     </header>
 
     <main class="container">
-      <!-- Stats Row (Updated to 4 columns) -->
+      <!-- Stats Row -->
       <div
         style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px"
       >
-        <!-- 1. Available Balance (Resets after payout) -->
+        <!-- 1. Available Balance -->
         <div class="card">
           <h3>Available Balance</h3>
           <h1
@@ -423,7 +550,7 @@
           >
         </div>
 
-        <!-- 2. Total Payouts (New Section) -->
+        <!-- 2. Total Payouts -->
         <div
           class="card"
           style="
@@ -529,6 +656,7 @@
             <label>Event Title</label
             ><input type="text" name="title" required />
           </div>
+          <!-- This div changes to block on mobile via CSS -->
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px">
             <div class="form-group">
               <label>Date</label><input type="date" name="date" required />

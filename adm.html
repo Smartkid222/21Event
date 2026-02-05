@@ -1,0 +1,652 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Panel | EventHub</title>
+    <!-- SHARED STYLES -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+      :root {
+        --primary: #6366f1;
+        --primary-dark: #4f46e5;
+        --accent: #ec4899;
+        --bg-dark: #0f172a;
+        --bg-card: rgba(30, 41, 59, 0.7);
+        --text-main: #f8fafc;
+        --text-muted: #94a3b8;
+        --border: rgba(255, 255, 255, 0.1);
+        --success: #10b981;
+        --danger: #ef4444;
+        --glass: blur(12px);
+        /* Fixed syntax error here: removed extra comma in rgba */
+        --shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+        --gradient: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Inter", sans-serif;
+      }
+      body {
+        background-color: var(--bg-dark);
+        color: var(--text-main);
+        min-height: 100vh;
+        background-image:
+          radial-gradient(
+            circle at 10% 20%,
+            rgba(99, 102, 241, 0.15) 0%,
+            transparent 40%
+          ),
+          radial-gradient(
+            circle at 90% 80%,
+            rgba(236, 72, 153, 0.15) 0%,
+            transparent 40%
+          );
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 40px 0;
+        animation: fadeIn 0.4s ease;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      button {
+        cursor: pointer;
+        border: none;
+        outline: none;
+        transition: all 0.2s ease;
+      }
+      .btn {
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .btn-primary {
+        background: var(--gradient);
+        color: white;
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+      }
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+      }
+      .btn-danger {
+        background: rgba(239, 68, 68, 0.2);
+        color: var(--danger);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+      }
+      .btn-success {
+        background: rgba(16, 185, 129, 0.2);
+        color: var(--success);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+      }
+      .btn-sm {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+      }
+
+      .card {
+        background: var(--bg-card);
+        backdrop-filter: var(--glass);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: var(--shadow);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 16px;
+        border-bottom: 1px solid var(--border);
+      }
+      th {
+        color: var(--text-muted);
+      }
+      .badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+      }
+
+      /* Masked Number Button Style */
+      .masked-acct-btn {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px dashed var(--text-muted);
+        color: var(--text-muted);
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: 0.9rem;
+        cursor: pointer;
+        display: inline-block;
+        transition: all 0.2s;
+      }
+      .masked-acct-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border-color: var(--primary);
+      }
+
+      /* Reveal Details Row */
+      .details-row {
+        display: none; /* Hidden by default */
+        background: rgba(255, 255, 255, 0.05);
+        padding: 12px;
+        margin-top: 8px;
+        border-radius: 8px;
+        border-left: 2px solid var(--accent);
+      }
+      .details-row.visible {
+        display: flex; /* Toggles to flex when visible */
+        justify-content: space-between;
+        align-items: center;
+        animation: slideDown 0.3s ease;
+      }
+      @keyframes slideDown {
+        from {
+          opacity: 0;
+          transform: translateY(-5px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .login-screen {
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      input {
+        width: 100%;
+        padding: 12px;
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: white;
+        margin-bottom: 16px;
+      }
+      #toast-container {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 2000;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .toast {
+        background: rgba(30, 41, 59, 0.95);
+        border-left: 4px solid var(--danger);
+        padding: 16px 24px;
+        border-radius: 8px;
+        animation: slideIn 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      @keyframes slideIn {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Login Gate -->
+    <div id="loginGate" class="login-screen">
+      <div class="card" style="width: 350px">
+        <h2 style="text-align: center; margin-bottom: 20px">Admin Access</h2>
+        <form onsubmit="app.auth.login(event)">
+          <input
+            type="text"
+            id="adminUser"
+            placeholder="Username (admin)"
+            required
+          />
+          <input
+            type="password"
+            id="adminPass"
+            placeholder="Password (admin)"
+            required
+          />
+          <button type="submit" class="btn btn-primary" style="width: 100%">
+            Enter Dashboard
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Admin Dashboard (Hidden until auth) -->
+    <div id="adminDash" style="display: none">
+      <header
+        style="
+          background: rgba(15, 23, 42, 0.9);
+          border-bottom: 1px solid var(--border);
+          padding: 20px 0;
+          margin-bottom: 40px;
+        "
+      >
+        <div
+          class="container"
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          "
+        >
+          <h1>Platform Admin</h1>
+          <button class="btn btn-danger" onclick="window.location.reload()">
+            Logout
+          </button>
+        </div>
+      </header>
+
+      <div class="container">
+        <!-- GLOBAL STATS -->
+        <div
+          style="
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 40px;
+          "
+        >
+          <div class="card">
+            <h3>Total Platform Revenue</h3>
+            <h1 id="globRev" style="color: var(--primary); margin: 10px 0">
+              $0
+            </h1>
+          </div>
+          <div class="card">
+            <h3>Total Tickets Sold</h3>
+            <h1 id="globTickets" style="margin: 10px 0">0</h1>
+          </div>
+          <div class="card">
+            <h3>Total Users</h3>
+            <h1 id="globUsers" style="margin: 10px 0">0</h1>
+          </div>
+          <!-- Platform Profit -->
+          <div
+            class="card"
+            style="
+              border: 2px solid var(--success);
+              background: rgba(16, 185, 129, 0.1);
+            "
+          >
+            <h3>
+              <i class="ph ph-trend-up" style="margin-right: 8px"></i>Platform
+              Profit
+            </h3>
+            <h1 id="globProfit" style="color: var(--success); margin: 10px 0">
+              $0.00
+            </h1>
+            <small style="color: var(--text-muted); font-size: 0.75rem"
+              >5% of Gross Sales</small
+            >
+          </div>
+        </div>
+
+        <!-- PAYOUT REQUESTS SECTION -->
+        <div class="card" style="margin-bottom: 40px">
+          <h3>Payout Requests</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Organizer</th>
+                <th>Bank Name</th>
+                <th>Account Number</th>
+                <th>Amount</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="withdrawalsTableBody"></tbody>
+          </table>
+        </div>
+
+        <!-- SYSTEM TABLES -->
+        <div class="card">
+          <h3>All Events System-Wide</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Event</th>
+                <th>Organizer ID</th>
+                <th>Gross Sales</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="eventsTable"></tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h3>User Management</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="usersTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div id="toast-container"></div>
+
+    <script>
+      const app = {
+        platformFee: 0.05, // 5%
+
+        init: () => {
+          // Seed Withdrawals if empty
+          if (!localStorage.getItem("eh_withdrawals")) {
+            localStorage.setItem("eh_withdrawals", JSON.stringify([]));
+          }
+
+          // Initialize users if empty (to prevent errors with mapping)
+          if (!localStorage.getItem("eh_users")) {
+            localStorage.setItem("eh_users", JSON.stringify([]));
+          }
+
+          // Check session on load
+          if (localStorage.getItem("eh_admin_session")) {
+            document.getElementById("loginGate").style.display = "none";
+            document.getElementById("adminDash").style.display = "block";
+            app.ui.loadDashboard();
+          }
+        },
+
+        get: (k) => JSON.parse(localStorage.getItem(k) || "[]"),
+        save: (k, v) => localStorage.setItem(k, JSON.stringify(v)),
+
+        // Helper to Normalize Event Data (Backward Compatibility)
+        normalizeEvent: (event) => {
+          // If event doesn't have the new 'tickets' array, create it from legacy properties
+          if (!event.tickets || event.tickets.length === 0) {
+            event.tickets = [
+              {
+                type: "General Admission",
+                price: event.price || 0,
+                qty: event.totalTickets || 0,
+                sold: event.sold || 0,
+              },
+            ];
+          }
+          return event;
+        },
+
+        ui: {
+          loadDashboard: () => {
+            const events = app.get("eh_events");
+            const users = app.get("eh_users");
+            const withdrawals = app.get("eh_withdrawals");
+
+            // --- 1. CALCULATE STATS (CORRECTED FOR GROSS REVENUE) ---
+            let totalTicketSales = 0; // This is what the organizers earn (The $125)
+            let totalFees = 0; // This is the platform's cut (The $6.25)
+            let totalTicketsSold = 0;
+
+            events.forEach((e) => {
+              const normE = app.normalizeEvent(e);
+              normE.tickets.forEach((t) => {
+                // Calculate revenue based on ticket price only
+                const sales = t.price * t.sold;
+                const fee = sales * app.platformFee; // 5% fee
+
+                totalTicketSales += sales;
+                totalFees += fee;
+                totalTicketsSold += t.sold;
+              });
+            });
+
+            // Total Platform Revenue = Money Customers Actually Paid (Sales + Fees)
+            const totalGrossRevenue = totalTicketSales + totalFees;
+
+            // Platform Profit is strictly the fees collected
+            const platformProfit = totalFees;
+
+            document.getElementById("globRev").innerText =
+              "$" +
+              totalGrossRevenue.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+              });
+            document.getElementById("globTickets").innerText = totalTicketsSold;
+            document.getElementById("globUsers").innerText = users.length;
+            document.getElementById("globProfit").innerText =
+              "$" +
+              platformProfit.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+              });
+
+            // --- 2. PAYOUT REQUESTS TABLE ---
+            const wTable = document.getElementById("withdrawalsTableBody");
+
+            if (withdrawals.length === 0) {
+              wTable.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-muted);">No payout requests yet.</td></tr>`;
+            } else {
+              wTable.innerHTML = withdrawals
+                .map((w) => {
+                  const org = users.find((u) => u.id === w.organizerId);
+                  const orgName = org ? org.name : "Unknown";
+                  // Create Masked Button
+                  const maskedBtn = `<button class="masked-acct-btn" onclick="app.ui.toggleDetails('${w.id}')">**** ${w.accountNum.slice(-4)}</button>`;
+
+                  return `
+                        <tr>
+                            <td>${orgName}</td>
+                            <td>${w.bankName || "-"}</td>
+                            <td>${maskedBtn}</td>
+                            <td>$${parseFloat(w.amount).toLocaleString()}</td>
+                            <td>${new Date(w.date).toLocaleDateString()}</td>
+                            <td><span class="badge" style="background:${w.status === "Approved" ? "var(--success)" : "var(--text-muted)"}">${w.status}</span></td>
+                            <td>
+                                ${
+                                  w.status !== "Approved"
+                                    ? `<button class="btn btn-success btn-sm" onclick="app.handlers.approveWithdrawal('${w.id}')">Approve</button>`
+                                    : `<span style="color:var(--success);"><i class="ph ph-check"></i> Paid</span>`
+                                }
+                            </td>
+                        </tr>
+                        <!-- Reveal Details Row (Hidden by default) -->
+                        <tr class="details-row" id="details-${w.id}">
+                            <td colspan="4" style="color:var(--text-muted); padding-left:12px;">
+                                <strong>Full Account Details:</strong><br>
+                                <span style="color:white; font-weight:600;">${w.accountNum}</span>
+                            </td>
+                        </tr>
+                    `;
+                })
+                .join("");
+            }
+
+            // --- 3. EVENTS TABLE (UPDATED FOR MULTI-TICKET) ---
+            const eTable = document.getElementById("eventsTable");
+            eTable.innerHTML = events
+              .map((e) => {
+                const normE = app.normalizeEvent(e);
+                // Calculate Ticket Sales for this specific event (sum of all ticket types)
+                // Note: This is the "Organizer's Share" (before fees are deducted visually, or simply ticket sales)
+                const eventTicketSales = normE.tickets.reduce(
+                  (acc, t) => acc + t.price * t.sold,
+                  0,
+                );
+
+                // Calculate the Gross Revenue for this event (Sales + Fees)
+                const eventGross = eventTicketSales * (1 + app.platformFee);
+
+                return `
+                    <tr>
+                        <td>${e.title}</td>
+                        <td style="color:var(--text-muted); font-size:0.9rem;">${e.organizerId || "Unknown"}</td>
+                        <!-- Showing GROSS Revenue (Money In) -->
+                        <td>$${eventGross.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                        <td><button class="btn btn-danger btn-sm" onclick="app.handlers.deleteEvent('${e.id}')">Delete</button></td>
+                    </tr>
+                `;
+              })
+              .join("");
+
+            // --- 4. USERS TABLE ---
+            const uTable = document.getElementById("usersTable");
+            uTable.innerHTML = users
+              .map((u) => {
+                const isBanned = !!u.banned;
+                const statusBadge = isBanned
+                  ? `<span class="badge" style="background:var(--danger);">Banned</span>`
+                  : `<span class="badge" style="background:var(--success);">Active</span>`;
+
+                const btnText = isBanned ? "Unban" : "Ban";
+                const btnClass = isBanned
+                  ? "btn btn-success"
+                  : "btn btn-danger";
+                const btnIcon = isBanned ? "ph-arrow-u-up-left" : "ph-prohibit";
+
+                return `
+                    <tr>
+                        <td>${u.name}</td>
+                        <td>${u.email}</td>
+                        <td><span class="badge" style="background:${u.role === "organizer" ? "var(--primary)" : "var(--text-muted)"}">${u.role}</span></td>
+                        <td>${statusBadge}</td>
+                        <td><button class="${btnClass} btn-sm" onclick="app.handlers.toggleBan('${u.id}')"><i class="ph ${btnIcon}"></i> ${btnText}</button></td>
+                    </tr>
+                `;
+              })
+              .join("");
+          },
+
+          toggleDetails: (id) => {
+            // Find the details row and toggle visibility
+            const row = document.getElementById(`details-${id}`);
+            if (row) {
+              if (row.classList.contains("visible")) {
+                row.classList.remove("visible");
+              } else {
+                // Close other open details first
+                document
+                  .querySelectorAll(".details-row.visible")
+                  .forEach((el) => el.classList.remove("visible"));
+                row.classList.add("visible");
+              }
+            }
+          },
+        },
+
+        handlers: {
+          approveWithdrawal: (id) => {
+            if (!confirm("Approve this payout request?")) return;
+
+            const withdrawals = app.get("eh_withdrawals");
+            const idx = withdrawals.findIndex((w) => w.id === id);
+
+            if (idx > -1) {
+              // Update status
+              withdrawals[idx].status = "Approved";
+              app.save("eh_withdrawals", withdrawals);
+              app.ui.loadDashboard();
+              app.ui.toast("Payout Approved.");
+            }
+          },
+
+          deleteEvent: (id) => {
+            if (!confirm("Delete this event?")) return;
+            let evts = app.get("eh_events");
+            evts = evts.filter((e) => e.id !== id);
+            app.save("eh_events", evts);
+            app.ui.loadDashboard();
+          },
+          toggleBan: (id) => {
+            const users = app.get("eh_users");
+            const idx = users.findIndex((u) => u.id === id);
+            const user = users[idx];
+
+            if (
+              confirm(
+                `Are you sure you want to ${user.banned ? "unban" : "ban"} ${user.name}?`,
+              )
+            ) {
+              // Toggle ban status (do not delete)
+              const newBanStatus = !user.banned;
+              users[idx].banned = newBanStatus;
+              app.save("eh_users", users);
+              app.ui.loadDashboard();
+
+              if (newBanStatus) {
+                app.ui.toast(`User ${user.name} has been banned.`, "error");
+              } else {
+                app.ui.toast(`User ${user.name} has been unbanned.`, "success");
+              }
+            }
+          },
+        },
+
+        auth: {
+          login: (e) => {
+            e.preventDefault();
+            const u = document.getElementById("adminUser").value;
+            const p = document.getElementById("adminPass").value;
+            if (u === "admin" && p === "admin") {
+              localStorage.setItem("eh_admin_session", "true");
+              document.getElementById("loginGate").style.display = "none";
+              document.getElementById("adminDash").style.display = "block";
+              app.ui.loadDashboard();
+            } else {
+              app.ui.toast("Invalid Admin Credentials", "error");
+            }
+          },
+        },
+
+        toast: (msg, type) => {
+          const c = document.getElementById("toast-container");
+          const t = document.createElement("div");
+          t.className = "toast";
+          t.innerHTML = `<i class="ph ph-warning"></i> ${msg}`;
+          c.appendChild(t);
+          setTimeout(() => t.remove(), 3000);
+        },
+      };
+
+      // Init
+      document.addEventListener("DOMContentLoaded", app.init);
+    </script>
+  </body>
+</html>

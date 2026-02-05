@@ -778,6 +778,7 @@
         <i class="ph ph-ticket"></i>
         <span>Tickets</span>
       </div>
+      <!-- This button was the problem. It now has an ID and logic assigned below -->
       <div class="mobile-nav-item highlight" id="mobileOrgBtn">
         <i class="ph ph-plus-circle"></i>
         <span id="mobileOrgText">Organize</span>
@@ -1661,7 +1662,8 @@
           // ... keep the rest of ui object (checkSession, openModal, closeModal, etc.) exactly as is ...
           checkSession: () => {
             const user = JSON.parse(localStorage.getItem("eh_session"));
-            // Desktop Nav
+
+            // --- DESKTOP NAV UPDATES ---
             if (user) {
               document.getElementById("loggedOutNav").style.display = "none";
               document.getElementById("loggedInNav").style.display = "flex";
@@ -1681,23 +1683,43 @@
               document.getElementById("loggedOutNav").style.display = "flex";
               document.getElementById("loggedInNav").style.display = "none";
             }
-            // Mobile Nav Adjustments
+
+            // --- MOBILE NAV UPDATES ---
             const mobileOrgBtn = document.getElementById("mobileOrgBtn");
             const mobileLoginBtn = document.getElementById("mobileLoginBtn");
+
             if (user) {
+              // User IS Logged In
+
+              // Update Login Button -> Logout
               mobileLoginBtn.onclick = app.auth.logout;
               mobileLoginBtn.querySelector("span").innerText = "Logout";
               mobileLoginBtn.querySelector("i").className = "ph ph-sign-out";
+
+              // Update Org Button Logic
               if (user.role === "organizer") {
+                // IS Organizer
                 mobileOrgBtn.onclick = () =>
                   (window.location.href = "organizer.html");
                 document.getElementById("mobileOrgText").innerText =
                   "Dashboard";
+              } else {
+                // Is Attendee (Not Organizer)
+                // FIX: This was missing. Open the "Become Organizer" modal.
+                mobileOrgBtn.onclick = () => app.ui.openModal("organizerModal");
+                document.getElementById("mobileOrgText").innerText = "Organize";
               }
             } else {
+              // User is NOT Logged In (Guest)
+
+              // Update Login Button -> Login
               mobileLoginBtn.onclick = () => app.ui.openModal("authModal");
               mobileLoginBtn.querySelector("span").innerText = "Profile";
               mobileLoginBtn.querySelector("i").className = "ph ph-user";
+
+              // FIX: This was missing. Ask Guest to Login first.
+              mobileOrgBtn.onclick = () => app.ui.openModal("authModal");
+              document.getElementById("mobileOrgText").innerText = "Organize";
             }
           },
           openModal: (id) => document.getElementById(id).classList.add("open"),

@@ -1,0 +1,1093 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Organizer Dashboard | EventHub</title>
+    <!-- SHARED STYLES -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+      :root {
+        --primary: #6366f1;
+        --primary-dark: #4f46e5;
+        --accent: #ec4899;
+        --bg-dark: #0f172a;
+        --bg-card: rgba(30, 41, 59, 0.7);
+        --text-main: #f8fafc;
+        --text-muted: #94a3b8;
+        --border: rgba(255, 255, 255, 0.1);
+        --success: #10b981;
+        --danger: #ef4444;
+        --glass: blur(12px);
+        --shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+        --gradient: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Inter", sans-serif;
+      }
+      body {
+        background-color: var(--bg-dark);
+        color: var(--text-main);
+        min-height: 100vh;
+        background-image:
+          radial-gradient(
+            circle at 10% 20%,
+            rgba(99, 102, 241, 0.15) 0%,
+            transparent 40%
+          ),
+          radial-gradient(
+            circle at 90% 80%,
+            rgba(236, 72, 153, 0.15) 0%,
+            transparent 40%
+          );
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+        padding: 40px 0;
+        animation: fadeIn 0.4s ease;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      button {
+        cursor: pointer;
+        border: none;
+        outline: none;
+        transition: all 0.2s ease;
+      }
+      .btn {
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .btn-primary {
+        background: var(--gradient);
+        color: white;
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+      }
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+      }
+      .btn-primary:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border);
+        color: var(--text-main);
+      }
+      .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+      .btn-danger {
+        background: rgba(239, 68, 68, 0.2);
+        color: var(--danger);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+      }
+      .btn-sm {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+      }
+
+      .card {
+        background: var(--bg-card);
+        backdrop-filter: var(--glass);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: var(--shadow);
+        margin-bottom: 24px;
+      }
+
+      .form-group {
+        margin-bottom: 16px;
+      }
+      label {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+      }
+      input,
+      select,
+      textarea {
+        width: 100%;
+        padding: 12px;
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: white;
+        font-size: 1rem;
+      }
+      /* Readonly Input Style */
+      input[readonly] {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--success);
+        font-weight: 700;
+        cursor: not-allowed;
+        border-color: var(--success);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 16px;
+        border-bottom: 1px solid var(--border);
+      }
+      th {
+        color: var(--text-muted);
+        font-weight: 500;
+      }
+
+      /* Modal & Toast */
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(5px);
+        z-index: 1000;
+        display: none;
+        justify-content: center;
+        align-items: center;
+      }
+      .modal-overlay.open {
+        display: flex;
+      }
+      .modal {
+        width: 90%;
+        max-width: 600px;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+      #toast-container {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 2000;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .toast {
+        background: rgba(30, 41, 59, 0.95);
+        backdrop-filter: blur(10px);
+        border-left: 4px solid var(--primary);
+        padding: 16px 24px;
+        border-radius: 8px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        animation: slideIn 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      @keyframes slideIn {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      /* Withdrawals & Balance Styles */
+      .balance-card {
+        text-align: center;
+        border: 2px solid var(--primary);
+        background: rgba(99, 102, 241, 0.1);
+      }
+      .balance-amount {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin: 10px 0;
+        color: var(--primary);
+      }
+      .withdrawal-list {
+        list-style: none;
+        margin-top: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .withdrawal-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 16px;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 8px;
+        align-items: center;
+      }
+
+      /* QR Scanner Styles */
+      .scanner-viewport {
+        width: 100%;
+        height: 400px;
+        background: black;
+        border-radius: 16px;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .scanner-corner {
+        position: absolute;
+        width: 40px;
+        height: 40px;
+        border: 4px solid var(--success);
+        z-index: 10;
+      }
+      .tl {
+        top: 20px;
+        left: 20px;
+        border-right: none;
+        border-bottom: none;
+        border-top-left-radius: 8px;
+      }
+      .tr {
+        top: 20px;
+        right: 20px;
+        border-left: none;
+        border-bottom: none;
+        border-top-right-radius: 8px;
+      }
+      .bl {
+        bottom: 20px;
+        left: 20px;
+        border-right: none;
+        border-top: none;
+        border-bottom-left-radius: 8px;
+      }
+      .br {
+        bottom: 20px;
+        right: 20px;
+        border-left: none;
+        border-top: none;
+        border-bottom-right-radius: 8px;
+      }
+
+      .scan-line {
+        position: absolute;
+        width: 100%;
+        height: 2px;
+        background: var(--danger);
+        top: 50%;
+        box-shadow: 0 0 4px var(--danger);
+        animation: scanMove 2s infinite ease-in-out;
+      }
+      @keyframes scanMove {
+        0% {
+          top: 10%;
+          opacity: 0;
+        }
+        50% {
+          opacity: 1;
+        }
+        100% {
+          top: 90%;
+          opacity: 0;
+        }
+      }
+
+      .scan-result {
+        color: white;
+        font-size: 1.2rem;
+        z-index: 20;
+        text-align: center;
+      }
+
+      .ticket-type-row {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border);
+        padding: 16px;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        position: relative;
+        animation: fadeIn 0.3s ease;
+      }
+      .remove-ticket-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--danger);
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+      .ticket-type-row .row-content {
+        display: grid;
+        grid-template-columns: 1fr 1fr auto;
+        gap: 10px;
+        align-items: center;
+      }
+      .agreement-box {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        background: rgba(236, 72, 153, 0.1);
+        padding: 12px;
+        border-radius: 8px;
+        margin-top: 16px;
+        border-left: 3px solid var(--accent);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <nav
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+          "
+        >
+          <h1>Organizer Dashboard</h1>
+          <button
+            class="btn btn-primary"
+            onclick="app.ui.openModal('createEventModal')"
+          >
+            <i class="ph ph-plus"></i> Create Event
+          </button>
+        </nav>
+        <div class="nav-actions">
+          <span id="userName" style="color: var(--text-muted)"></span>
+          <button
+            class="btn btn-secondary"
+            onclick="window.location.href = 'index.html'"
+          >
+            View Public Site
+          </button>
+          <button class="btn btn-secondary" onclick="window.location.reload()">
+            Logout
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <!-- Stats Row (Updated to 4 columns) -->
+      <div
+        style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px"
+      >
+        <!-- 1. Available Balance (Resets after payout) -->
+        <div class="card">
+          <h3>Available Balance</h3>
+          <h1
+            id="availableRevenue"
+            style="margin: 10px 0; color: var(--primary)"
+          >
+            $0.00
+          </h1>
+          <small style="color: var(--text-muted); font-size: 0.75rem"
+            >(Ticket Sales - Pending Payouts)</small
+          >
+        </div>
+
+        <!-- 2. Total Payouts (New Section) -->
+        <div
+          class="card"
+          style="
+            border: 2px solid var(--success);
+            background: rgba(16, 185, 129, 0.05);
+          "
+        >
+          <h3 style="color: var(--success)">
+            <i class="ph ph-wallet"></i> Total Payouts
+          </h3>
+          <h1 id="totalPayouts" style="margin: 10px 0; color: var(--success)">
+            $0.00
+          </h1>
+          <small style="color: var(--text-muted); font-size: 0.75rem"
+            >(Requested & Approved)</small
+          >
+        </div>
+
+        <!-- 3. Tickets Sold -->
+        <div class="card">
+          <h3>Tickets Sold</h3>
+          <h1 id="statSold" style="margin: 10px 0">0</h1>
+        </div>
+
+        <!-- 4. Active Events -->
+        <div class="card">
+          <h3>Active Events</h3>
+          <h1 id="statEvents" style="margin: 10px 0">0</h1>
+        </div>
+      </div>
+
+      <!-- Payout Section -->
+      <div class="card balance-card">
+        <h3>Request Payout</h3>
+        <div class="balance-amount" id="payoutBtnAmount">$0.00</div>
+        <button
+          id="payoutBtn"
+          class="btn btn-primary"
+          style="width: 100%; justify-content: center"
+          onclick="app.handlers.openWithdrawalModal()"
+        >
+          <i class="ph ph-money" style="margin-right: 8px"></i> Withdraw Funds
+        </button>
+      </div>
+
+      <!-- Recent Withdrawals -->
+      <div class="card" id="withdrawalHistoryCard" style="display: none">
+        <h2 style="margin-bottom: 16px">Payout History</h2>
+        <ul class="withdrawal-list" id="withdrawalsList">
+          <!-- Populated by JS -->
+        </ul>
+      </div>
+
+      <!-- Events Section -->
+      <div class="card">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          "
+        >
+          <h2>My Events</h2>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Event</th>
+                <th>Date</th>
+                <th>Tickets Sold / Total</th>
+                <th>Ticket Sales</th>
+                <th>Net Revenue</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="eventsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <!-- Create Event Modal -->
+    <div class="modal-overlay" id="createEventModal">
+      <div class="modal card">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+          "
+        >
+          <h2>Create Event</h2>
+          <button
+            class="btn btn-secondary"
+            onclick="app.ui.closeModal('createEventModal')"
+          >
+            <i class="ph ph-x"></i>
+          </button>
+        </div>
+        <form onsubmit="app.handlers.createEvent(event)">
+          <div class="form-group">
+            <label>Event Title</label
+            ><input type="text" name="title" required />
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px">
+            <div class="form-group">
+              <label>Date</label><input type="date" name="date" required />
+            </div>
+            <div class="form-group">
+              <label>Category</label>
+              <select name="category">
+                <option>Music</option>
+                <option>Tech</option>
+                <option>Business</option>
+                <option>Art</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Location</label
+            ><input type="text" name="location" required />
+          </div>
+
+          <!-- Dynamic Ticket Types Section -->
+          <div style="margin-bottom: 16px">
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 10px;
+              "
+            >
+              <label style="margin: 0">Ticket Types</label>
+              <button
+                type="button"
+                class="btn btn-secondary btn-sm"
+                onclick="app.handlers.addTicketRow()"
+              >
+                <i class="ph ph-plus"></i> Add Type
+              </button>
+            </div>
+            <div id="ticketTypesContainer"></div>
+          </div>
+
+          <!-- Fee Agreement -->
+          <div class="agreement-box">
+            <label
+              style="
+                display: flex;
+                gap: 10px;
+                align-items: start;
+                color: var(--text-main);
+                margin: 0;
+              "
+            >
+              <input
+                type="checkbox"
+                required
+                style="width: auto; margin-top: 2px"
+              />
+              <span>
+                I agree that a <strong>5% Service Fee</strong> is added to the
+                ticket price paid by buyers. This fee is paid by the buyer on
+                top of my price.
+              </span>
+            </label>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%">
+            Publish Event
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Withdrawal Modal -->
+    <div class="modal-overlay" id="withdrawalModal">
+      <div class="modal card">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+          "
+        >
+          <h2>Request Withdrawal</h2>
+          <button
+            class="btn btn-secondary"
+            onclick="app.ui.closeModal('withdrawalModal')"
+          >
+            <i class="ph ph-x"></i>
+          </button>
+        </div>
+        <form onsubmit="app.handlers.requestWithdrawal(event)">
+          <div class="form-group">
+            <label>Available to Withdraw ($)</label>
+            <!-- Readonly Input: Pre-filled with Available Revenue -->
+            <input
+              type="number"
+              id="withdrawalAmountInput"
+              name="amount"
+              readonly
+              step="0.01"
+            />
+            <small style="color: var(--text-muted)"
+              >This is your current balance after pending payouts.</small
+            >
+          </div>
+          <div class="form-group">
+            <label>Bank Name</label
+            ><input
+              type="text"
+              name="bankName"
+              required
+              placeholder="e.g. Chase Bank"
+            />
+          </div>
+          <div class="form-group">
+            <label>Account Number</label
+            ><input
+              type="text"
+              name="accountNum"
+              required
+              placeholder="Last 4 digits"
+            />
+          </div>
+          <div class="agreement-box">
+            <p style="margin: 0">
+              <i class="ph ph-info"></i> Withdrawals are processed within
+              <strong>3 working days</strong>.
+            </p>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%">
+            Submit Request
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- QR Scanner Modal -->
+    <div class="modal-overlay" id="scannerModal">
+      <div class="modal card">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+          "
+        >
+          <h2>Scan Ticket</h2>
+          <button
+            class="btn btn-secondary"
+            onclick="app.ui.closeModal('scannerModal')"
+          >
+            <i class="ph ph-x"></i>
+          </button>
+        </div>
+
+        <!-- Simulated Camera Viewport -->
+        <div class="scanner-viewport">
+          <div class="scanner-corner tl"></div>
+          <div class="scanner-corner tr"></div>
+          <div class="scanner-corner bl"></div>
+          <div class="scanner-corner br"></div>
+          <div class="scan-line"></div>
+          <div class="scan-result" id="scanResultText">
+            Initializing Camera...
+          </div>
+        </div>
+        <p
+          style="
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+          "
+        >
+          Point camera at ticket QR code to validate entry.
+        </p>
+      </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <script>
+      /**
+       * organizer.html - Updated Ledger Logic
+       */
+      const app = {
+        currentUser: null,
+        platformFee: 0.05, // 5%
+        currentScanningEventId: null,
+
+        init: () => {
+          // 1. Auth Check
+          const session = localStorage.getItem("eh_session");
+          if (!session) return (window.location.href = "index.html");
+
+          const user = JSON.parse(session);
+          if (user.role !== "organizer")
+            return (window.location.href = "index.html");
+
+          app.currentUser = user;
+          document.getElementById("userName").innerText =
+            user.organizerName || user.name;
+
+          // Seed Withdrawals if empty
+          if (!localStorage.getItem("eh_withdrawals")) {
+            localStorage.setItem("eh_withdrawals", JSON.stringify([]));
+          }
+
+          app.renderDashboard();
+        },
+
+        get: (k) => JSON.parse(localStorage.getItem(k) || "[]"),
+        save: (k, v) => localStorage.setItem(k, JSON.stringify(v)),
+
+        // Helper to Normalize Event Data (Backward Compatibility)
+        normalizeEvent: (event) => {
+          if (!event.tickets || event.tickets.length === 0) {
+            event.tickets = [
+              {
+                type: "General Admission",
+                price: event.price || 0,
+                qty: event.totalTickets || 0,
+                sold: event.sold || 0,
+              },
+            ];
+          }
+          return event;
+        },
+
+        renderDashboard: () => {
+          const events = app
+            .get("eh_events")
+            .filter((e) => e.organizerId === app.currentUser.id);
+          const withdrawals = app
+            .get("eh_withdrawals")
+            .filter((w) => w.organizerId === app.currentUser.id);
+
+          // --- 1. CALCULATE HISTORICAL SALES ---
+          let totalHistoricalSales = 0;
+          let totalSold = 0;
+
+          events.forEach((e) => {
+            const normE = app.normalizeEvent(e);
+            normE.tickets.forEach((t) => {
+              totalHistoricalSales += t.sold * t.price;
+              totalSold += t.sold;
+            });
+          });
+
+          // --- 2. CALCULATE TOTAL PAYOUTS (LOCKED FUNDS) ---
+          // We consider 'Pending' and 'Approved' as funds that are no longer available
+          let totalPayouts = 0;
+          withdrawals.forEach((w) => {
+            if (w.status === "Pending" || w.status === "Approved") {
+              totalPayouts += parseFloat(w.amount);
+            }
+          });
+
+          // --- 3. CALCULATE AVAILABLE BALANCE ---
+          const availableBalance = totalHistoricalSales - totalPayouts;
+
+          // --- UPDATE UI STATS ---
+          document.getElementById("availableRevenue").innerText =
+            "$" +
+            availableBalance.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+            });
+
+          document.getElementById("totalPayouts").innerText =
+            "$" +
+            totalPayouts.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+            });
+
+          document.getElementById("statSold").innerText = totalSold;
+          document.getElementById("statEvents").innerText = events.length;
+
+          // Update Payout Button Text
+          const btnAmount = document.getElementById("payoutBtnAmount");
+          const btn = document.getElementById("payoutBtn");
+          btnAmount.innerText =
+            "$" +
+            availableBalance.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+            });
+
+          if (availableBalance <= 0) {
+            btn.disabled = true;
+            btn.style.opacity = "0.5";
+            btn.style.cursor = "not-allowed";
+          } else {
+            btn.disabled = false;
+            btn.style.opacity = "1";
+            btn.style.cursor = "pointer";
+          }
+
+          // --- Render Events Table ---
+          const tbody = document.getElementById("eventsTableBody");
+          tbody.innerHTML = events
+            .map((e) => {
+              const normE = app.normalizeEvent(e);
+              let eventSales = 0;
+              let eventSold = 0;
+
+              normE.tickets.forEach((t) => {
+                eventSales += t.sold * t.price;
+                eventSold += t.sold;
+              });
+
+              return `
+              <tr>
+                <td><strong>${e.title}</strong><br><span style="font-size:0.8rem; color:var(--text-muted);">${e.location}</span></td>
+                <td>${new Date(e.date).toLocaleDateString()}</td>
+                <td>${eventSold} / ${normE.tickets.reduce((a, b) => a + b.qty, 0)}</td>
+                <td>$${eventSales.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                <td style="color:var(--success); font-weight:600;">$${eventSales.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                <td>
+                    <button class="btn btn-secondary btn-sm" onclick="app.handlers.initScan('${e.id}')"><i class="ph ph-camera"></i> Scan</button>
+                    <button class="btn btn-danger btn-sm" onclick="app.handlers.deleteEvent('${e.id}')"><i class="ph ph-trash"></i></button>
+                </td>
+              </tr>
+            `;
+            })
+            .join("");
+
+          // --- Render Withdrawal History ---
+          const wList = document.getElementById("withdrawalsList");
+          const wCard = document.getElementById("withdrawalHistoryCard");
+          if (withdrawals.length > 0) {
+            wCard.style.display = "block";
+            wList.innerHTML = withdrawals
+              .map(
+                (w) => `
+                  <li class="withdrawal-item">
+                    <span>$${parseFloat(w.amount).toLocaleString()}</span>
+                    <span style="font-size:0.9rem; color:var(--text-muted);">to ${w.bankName}</span>
+                    <span class="badge" style="background:${w.status === "Approved" ? "var(--success)" : "var(--text-muted)"}">${w.status}</span>
+                  </li>
+              `,
+              )
+              .join("");
+          } else {
+            wCard.style.display = "none";
+          }
+        },
+
+        handlers: {
+          // Scanning
+          initScan: (eventId) => {
+            app.currentScanningEventId = eventId;
+            app.ui.openModal("scannerModal");
+
+            const resultText = document.getElementById("scanResultText");
+            resultText.innerText = "Searching for QR Code...";
+            resultText.style.color = "white";
+
+            // Simulate scanning delay
+            setTimeout(() => {
+              resultText.innerText = "Detected QR Code";
+              resultText.style.color = "var(--success)";
+            }, 1500);
+
+            setTimeout(() => {
+              app.ui.closeModal("scannerModal");
+              const randomTicketId = "TIX-" + Math.floor(Math.random() * 1000);
+              app.ui.showToast(
+                `Ticket ${randomTicketId} VALIDATED. Entry Approved.`,
+                "success",
+              );
+            }, 2500);
+          },
+
+          addTicketRow: () => {
+            const container = document.getElementById("ticketTypesContainer");
+            const id = Date.now();
+            const div = document.createElement("div");
+            div.className = "ticket-type-row";
+            div.id = `ticketRow-${id}`;
+            div.innerHTML = `
+              <button type="button" class="remove-ticket-btn" onclick="app.handlers.removeTicketRow('${id}')"><i class="ph ph-x"></i></button>
+              <div class="row-content">
+                <div class="form-group" style="margin:0">
+                    <label>Type</label>
+                    <input type="text" name="ticket_type_${id}" placeholder="e.g. VIP, Regular" required />
+                </div>
+                <div class="form-group" style="margin:0">
+                    <label>Price ($)</label>
+                    <input type="number" name="ticket_price_${id}" min="0" step="0.01" required />
+                </div>
+                <div class="form-group" style="margin:0">
+                    <label>Quantity</label>
+                    <input type="number" name="ticket_qty_${id}" min="1" required />
+                </div>
+              </div>
+            `;
+            container.appendChild(div);
+          },
+
+          removeTicketRow: (id) => {
+            const row = document.getElementById(`ticketRow-${id}`);
+            if (document.querySelectorAll(".ticket-type-row").length > 1) {
+              row.remove();
+            } else {
+              app.ui.showToast("You need at least one ticket type", "error");
+            }
+          },
+
+          createEvent: (e) => {
+            e.preventDefault();
+            const fd = new FormData(e.target);
+
+            const ticketRows = document.querySelectorAll(".ticket-type-row");
+            const tickets = [];
+            let globalTotalTickets = 0;
+
+            ticketRows.forEach((row) => {
+              const inputs = row.querySelectorAll("input");
+              tickets.push({
+                type: inputs[0].value,
+                price: parseFloat(inputs[1].value),
+                qty: parseInt(inputs[2].value),
+                sold: 0,
+              });
+              globalTotalTickets += parseInt(inputs[2].value);
+            });
+
+            if (tickets.length === 0) {
+              app.ui.showToast("Please add at least one ticket type", "error");
+              return;
+            }
+
+            const newEvent = {
+              id: "evt_" + Date.now(),
+              organizerId: app.currentUser.id,
+              title: fd.get("title"),
+              date: fd.get("date"),
+              location: fd.get("location"),
+              category: fd.get("category"),
+              tickets: tickets,
+              image: `https://picsum.photos/seed/${Date.now()}/400/300`,
+            };
+
+            const events = app.get("eh_events");
+            events.unshift(newEvent);
+            app.save("eh_events", events);
+            app.ui.closeModal("createEventModal");
+            app.ui.showToast("Event Created!");
+            app.renderDashboard();
+            e.target.reset();
+            document.getElementById("ticketTypesContainer").innerHTML = "";
+            app.handlers.addTicketRow();
+          },
+
+          deleteEvent: (id) => {
+            if (!confirm("Delete this event?")) return;
+            const events = app.get("eh_events").filter((e) => e.id !== id);
+            app.save("eh_events", events);
+            app.renderDashboard();
+          },
+
+          openWithdrawalModal: () => {
+            // Recalculate available balance to ensure accuracy
+            const events = app
+              .get("eh_events")
+              .filter((e) => e.organizerId === app.currentUser.id);
+
+            const withdrawals = app
+              .get("eh_withdrawals")
+              .filter((w) => w.organizerId === app.currentUser.id);
+
+            let totalHistoricalSales = 0;
+            events.forEach((e) => {
+              const normE = app.normalizeEvent(e);
+              normE.tickets.forEach((t) => {
+                totalHistoricalSales += t.sold * t.price;
+              });
+            });
+
+            let totalPayouts = 0;
+            withdrawals.forEach((w) => {
+              if (w.status === "Pending" || w.status === "Approved") {
+                totalPayouts += parseFloat(w.amount);
+              }
+            });
+
+            const availableBalance = totalHistoricalSales - totalPayouts;
+
+            if (availableBalance <= 0) {
+              app.ui.showToast("No funds available to withdraw.", "error");
+              return;
+            }
+
+            // Set readonly input value
+            const input = document.getElementById("withdrawalAmountInput");
+            input.value = availableBalance.toFixed(2);
+
+            app.ui.openModal("withdrawalModal");
+          },
+
+          requestWithdrawal: (e) => {
+            e.preventDefault();
+            const fd = new FormData(e.target);
+            // Get the readonly value (which equals Available Balance)
+            const amount = parseFloat(
+              document.getElementById("withdrawalAmountInput").value,
+            );
+
+            if (amount <= 0) {
+              app.ui.showToast("Insufficient funds", "error");
+              return;
+            }
+
+            const withdrawal = {
+              id: "w_" + Date.now(),
+              organizerId: app.currentUser.id,
+              amount: amount,
+              bankName: fd.get("bankName"),
+              accountNum: fd.get("accountNum"),
+              status: "Pending",
+              date: new Date().toISOString(),
+            };
+
+            const withdrawals = app.get("eh_withdrawals");
+            withdrawals.unshift(withdrawal);
+            app.save("eh_withdrawals", withdrawals);
+
+            app.ui.closeModal("withdrawalModal");
+            app.ui.showToast(
+              "Withdrawal Requested! Processing within 3 working days.",
+              "success",
+            );
+            app.renderDashboard();
+          },
+        },
+
+        ui: {
+          openModal: (id) => document.getElementById(id).classList.add("open"),
+          closeModal: (id) =>
+            document.getElementById(id).classList.remove("open"),
+          showToast: (msg, type = "success") => {
+            const c = document.getElementById("toast-container");
+            const t = document.createElement("div");
+            t.className = "toast";
+            t.style.borderLeftColor =
+              type === "error" ? "var(--danger)" : "var(--primary)";
+            t.innerHTML = `<i class="ph ${type === "error" ? "ph-warning" : "ph-check"}"></i> ${msg}`;
+            c.appendChild(t);
+            setTimeout(() => t.remove(), 3000);
+          },
+        },
+      };
+
+      // Init
+      document.addEventListener("DOMContentLoaded", () => {
+        app.init();
+        if (
+          document.getElementById("ticketTypesContainer").children.length === 0
+        ) {
+          app.handlers.addTicketRow();
+        }
+      });
+    </script>
+  </body>
+</html>

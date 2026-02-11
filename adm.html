@@ -4,7 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Admin Panel | EventHub</title>
-    <!-- SHARED STYLES -->
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
       rel="stylesheet"
@@ -104,7 +103,6 @@
         padding: 6px 12px;
         font-size: 0.8rem;
       }
-
       .card {
         background: var(--bg-card);
         backdrop-filter: var(--glass);
@@ -113,19 +111,16 @@
         padding: 24px;
         box-shadow: var(--shadow);
       }
-
-      /* Table Styles */
       .table-wrapper {
         overflow-x: auto;
-        -webkit-overflow-scrolling: touch; /* Smooth scroll on iOS */
+        -webkit-overflow-scrolling: touch;
         width: 100%;
         border-radius: 8px;
         border: 1px solid var(--border);
       }
-
       table {
         width: 100%;
-        min-width: 800px; /* Forces horizontal scroll on mobile */
+        min-width: 800px;
         border-collapse: collapse;
         margin-top: 20px;
       }
@@ -134,10 +129,11 @@
         text-align: left;
         padding: 16px;
         border-bottom: 1px solid var(--border);
-        white-space: nowrap; /* Prevent text wrapping inside cells */
+        white-space: nowrap;
       }
       th {
         color: var(--text-muted);
+        font-weight: 600;
       }
       .badge {
         padding: 4px 12px;
@@ -145,8 +141,6 @@
         font-size: 0.75rem;
         font-weight: 600;
       }
-
-      /* Masked Number Button Style */
       .masked-acct-btn {
         background: rgba(255, 255, 255, 0.1);
         border: 1px dashed var(--text-muted);
@@ -165,10 +159,8 @@
         color: white;
         border-color: var(--primary);
       }
-
-      /* Reveal Details Row */
       .details-row {
-        display: none; /* Hidden by default */
+        display: none;
         background: rgba(255, 255, 255, 0.05);
         padding: 12px;
         margin-top: 8px;
@@ -176,7 +168,7 @@
         border-left: 2px solid var(--accent);
       }
       .details-row.visible {
-        display: flex; /* Toggles to flex when visible */
+        display: flex;
         justify-content: space-between;
         align-items: center;
         animation: slideDown 0.3s ease;
@@ -191,7 +183,6 @@
           transform: translateY(0);
         }
       }
-
       .login-screen {
         height: 100vh;
         display: flex;
@@ -239,22 +230,14 @@
           opacity: 1;
         }
       }
-
-      /* -----------------------------------------------------------
-           5. MOBILE RESPONSIVE STYLES
-        ----------------------------------------------------------- */
       @media (max-width: 768px) {
         .container {
           padding: 20px 10px;
         }
-
-        /* Login Card */
         .login-screen .card {
           width: 100%;
           max-width: 400px;
         }
-
-        /* Header Stack */
         header .container {
           flex-direction: column;
           align-items: flex-start;
@@ -263,26 +246,19 @@
         header .btn {
           width: 100%;
         }
-
-        /* Stats Grid: 4 cols -> 2 cols */
         div[style*="grid-template-columns: repeat(4"] {
           grid-template-columns: 1fr 1fr !important;
           gap: 12px;
         }
-
         .card h1 {
           font-size: 1.5rem;
         }
         .card h3 {
           font-size: 0.9rem;
         }
-
-        /* Adjust Card padding for smaller screens */
         .card {
           padding: 16px;
         }
-
-        /* Toast positioning */
         #toast-container {
           bottom: 20px;
           left: 20px;
@@ -320,7 +296,7 @@
       </div>
     </div>
 
-    <!-- Admin Dashboard (Hidden until auth) -->
+    <!-- Admin Dashboard -->
     <div id="adminDash" style="display: none">
       <header
         style="
@@ -358,18 +334,23 @@
           <div class="card">
             <h3>Total Platform Revenue</h3>
             <h1 id="globRev" style="color: var(--primary); margin: 10px 0">
-              $0
+              ₦0
             </h1>
+            <small style="color: var(--text-muted); font-size: 0.7rem"
+              >(Internal Sales + Fees)</small
+            >
           </div>
           <div class="card">
             <h3>Total Tickets Sold</h3>
             <h1 id="globTickets" style="margin: 10px 0">0</h1>
+            <small style="color: var(--text-muted); font-size: 0.7rem"
+              >(Internal Only)</small
+            >
           </div>
           <div class="card">
             <h3>Total Users</h3>
             <h1 id="globUsers" style="margin: 10px 0">0</h1>
           </div>
-          <!-- Platform Profit -->
           <div
             class="card"
             style="
@@ -382,10 +363,10 @@
               Profit
             </h3>
             <h1 id="globProfit" style="color: var(--success); margin: 10px 0">
-              $0.00
+              ₦0.00
             </h1>
             <small style="color: var(--text-muted); font-size: 0.75rem"
-              >5% of Gross Sales</small
+              >5% of Internal Sales</small
             >
           </div>
         </div>
@@ -395,9 +376,9 @@
           class="card"
           style="margin-bottom: 40px; padding: 0; overflow: hidden"
         >
-          <!-- Wrapper for scrollable table -->
           <div style="padding: 24px 24px 0 24px">
             <h3>Payout Requests</h3>
+            <small style="color: var(--text-muted)">Requires Approval</small>
           </div>
           <div class="table-wrapper">
             <table>
@@ -438,9 +419,7 @@
         </div>
 
         <div class="card" style="padding: 0; overflow: hidden">
-          <div style="padding: 24px 24px 0 24px">
-            <h3>User Management</h3>
-          </div>
+          <div style="padding: 24px 24px 0 24px"><h3>User Management</h3></div>
           <div class="table-wrapper">
             <table>
               <thead>
@@ -461,21 +440,22 @@
     <div id="toast-container"></div>
 
     <script>
+      // ---------------------------------------------------------
+      // !!! CONFIGURATION: ENSURE THIS URL IS CORRECT !!!
+      // ---------------------------------------------------------
+      const API_URL =
+        "https://script.google.com/macros/s/AKfycbwC84QF4q6lPfTDsbnnWbWfH0nHX9k0ID_iNdeyPoE3CQ-YA38K5lC_Yjr2h9cMHSP8cg/exec";
+      // ---------------------------------------------------------
+
+      const fmtMoney = (amount) => {
+        const num = parseFloat(amount) || 0;
+        return "₦" + num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      };
+
       const app = {
-        platformFee: 0.05, // 5%
+        platformFee: 0.05,
 
         init: () => {
-          // Seed Withdrawals if empty
-          if (!localStorage.getItem("eh_withdrawals")) {
-            localStorage.setItem("eh_withdrawals", JSON.stringify([]));
-          }
-
-          // Initialize users if empty (to prevent errors with mapping)
-          if (!localStorage.getItem("eh_users")) {
-            localStorage.setItem("eh_users", JSON.stringify([]));
-          }
-
-          // Check session on load
           if (localStorage.getItem("eh_admin_session")) {
             document.getElementById("loginGate").style.display = "none";
             document.getElementById("adminDash").style.display = "block";
@@ -483,226 +463,215 @@
           }
         },
 
-        get: (k) => JSON.parse(localStorage.getItem(k) || "[]"),
-        save: (k, v) => localStorage.setItem(k, JSON.stringify(v)),
-
-        // Helper to Normalize Event Data (Backward Compatibility)
-        normalizeEvent: (event) => {
-          // If event doesn't have the new 'tickets' array, create it from legacy properties
-          if (!event.tickets || event.tickets.length === 0) {
-            event.tickets = [
-              {
-                type: "General Admission",
-                price: event.price || 0,
-                qty: event.totalTickets || 0,
-                sold: event.sold || 0,
-              },
-            ];
+        api: async (action, data = {}) => {
+          try {
+            const response = await fetch(API_URL, {
+              method: "POST",
+              body: JSON.stringify({ action, ...data }),
+            });
+            const result = await response.json();
+            return result;
+          } catch (err) {
+            console.error("API Error", err);
+            app.ui.toast("Connection Error", "error");
+            return {
+              status: "error",
+              message: "Network Error: " + err.message,
+            };
           }
-          return event;
         },
 
         ui: {
-          loadDashboard: () => {
-            const events = app.get("eh_events");
-            const users = app.get("eh_users");
-            const withdrawals = app.get("eh_withdrawals");
-
-            // --- 1. CALCULATE STATS (CORRECTED FOR GROSS REVENUE) ---
-            let totalTicketSales = 0; // This is what the organizers earn (The $125)
-            let totalFees = 0; // This is the platform's cut (The $6.25)
-            let totalTicketsSold = 0;
-
-            events.forEach((e) => {
-              const normE = app.normalizeEvent(e);
-              normE.tickets.forEach((t) => {
-                // Calculate revenue based on ticket price only
-                const sales = t.price * t.sold;
-                const fee = sales * app.platformFee; // 5% fee
-
-                totalTicketSales += sales;
-                totalFees += fee;
-                totalTicketsSold += t.sold;
-              });
-            });
-
-            // Total Platform Revenue = Money Customers Actually Paid (Sales + Fees)
-            const totalGrossRevenue = totalTicketSales + totalFees;
-
-            // Platform Profit is strictly the fees collected
-            const platformProfit = totalFees;
-
-            document.getElementById("globRev").innerText =
-              "$" +
-              totalGrossRevenue.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-              });
-            document.getElementById("globTickets").innerText = totalTicketsSold;
-            document.getElementById("globUsers").innerText = users.length;
-            document.getElementById("globProfit").innerText =
-              "$" +
-              platformProfit.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-              });
-
-            // --- 2. PAYOUT REQUESTS TABLE ---
-            const wTable = document.getElementById("withdrawalsTableBody");
-
-            if (withdrawals.length === 0) {
-              wTable.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-muted);">No payout requests yet.</td></tr>`;
-            } else {
-              wTable.innerHTML = withdrawals
-                .map((w) => {
-                  const org = users.find((u) => u.id === w.organizerId);
-                  const orgName = org ? org.name : "Unknown";
-                  // Create Masked Button
-                  const maskedBtn = `<button class="masked-acct-btn" onclick="app.ui.toggleDetails('${w.id}')">**** ${w.accountNum.slice(-4)}</button>`;
-
-                  // FIX: Changed colspan to 7 to match the table headers
-                  return `
-                        <tr>
-                            <td>${orgName}</td>
-                            <td>${w.bankName || "-"}</td>
-                            <td>${maskedBtn}</td>
-                            <td>$${parseFloat(w.amount).toLocaleString()}</td>
-                            <td>${new Date(w.date).toLocaleDateString()}</td>
-                            <td><span class="badge" style="background:${w.status === "Approved" ? "var(--success)" : "var(--text-muted)"}">${w.status}</span></td>
-                            <td>
-                                ${
-                                  w.status !== "Approved"
-                                    ? `<button class="btn btn-success btn-sm" onclick="app.handlers.approveWithdrawal('${w.id}')">Approve</button>`
-                                    : `<span style="color:var(--success);"><i class="ph ph-check"></i> Paid</span>`
-                                }
-                            </td>
-                        </tr>
-                        <!-- Reveal Details Row (Hidden by default) -->
-                        <tr class="details-row" id="details-${w.id}">
-                            <td colspan="7" style="color:var(--text-muted); padding-left:12px;">
-                                <strong>Full Account Details:</strong><br>
-                                <span style="color:white; font-weight:600;">${w.accountNum}</span>
-                            </td>
-                        </tr>
-                    `;
-                })
-                .join("");
+          loadDashboard: async () => {
+            // 1. Fetch Stats
+            const statsRes = await app.api("getAdminStats");
+            if (statsRes.status === "success") {
+              const s = statsRes.data;
+              document.getElementById("globRev").innerText = fmtMoney(
+                s.totalRevenue,
+              );
+              document.getElementById("globTickets").innerText = s.totalTickets;
+              document.getElementById("globUsers").innerText = s.totalUsers;
+              document.getElementById("globProfit").innerText = fmtMoney(
+                s.platformProfit,
+              );
             }
 
-            // --- 3. EVENTS TABLE (UPDATED FOR MULTI-TICKET) ---
-            const eTable = document.getElementById("eventsTable");
-            eTable.innerHTML = events
-              .map((e) => {
-                const normE = app.normalizeEvent(e);
-                // Calculate Ticket Sales for this specific event (sum of all ticket types)
-                // Note: This is the "Organizer's Share" (before fees are deducted visually, or simply ticket sales)
-                const eventTicketSales = normE.tickets.reduce(
-                  (acc, t) => acc + t.price * t.sold,
-                  0,
-                );
+            // 2. Fetch EVENTS
+            const eRes = await app.api("getEvents");
+            let eventsData = [];
+            if (eRes.status === "success") {
+              eventsData = eRes.data;
+            }
 
-                // Calculate the Gross Revenue for this event (Sales + Fees)
-                const eventGross = eventTicketSales * (1 + app.platformFee);
-
-                return `
-                    <tr>
-                        <td>${e.title}</td>
-                        <td style="color:var(--text-muted); font-size:0.9rem;">${e.organizerId || "Unknown"}</td>
-                        <!-- Showing GROSS Revenue (Money In) -->
-                        <td>$${eventGross.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                        <td><button class="btn btn-danger btn-sm" onclick="app.handlers.deleteEvent('${e.id}')">Delete</button></td>
-                    </tr>
-                `;
-              })
-              .join("");
-
-            // --- 4. USERS TABLE ---
-            const uTable = document.getElementById("usersTable");
-            uTable.innerHTML = users
-              .map((u) => {
-                const isBanned = !!u.banned;
-                const statusBadge = isBanned
-                  ? `<span class="badge" style="background:var(--danger);">Banned</span>`
-                  : `<span class="badge" style="background:var(--success);">Active</span>`;
-
-                const btnText = isBanned ? "Unban" : "Ban";
-                const btnClass = isBanned
-                  ? "btn btn-success"
-                  : "btn btn-danger";
-                const btnIcon = isBanned ? "ph-arrow-u-up-left" : "ph-prohibit";
-
-                return `
+            // 3. Fetch USERS
+            const uRes = await app.api("getAllUsers");
+            let usersData = [];
+            if (uRes.status === "success") {
+              usersData = uRes.data;
+              const uTable = document.getElementById("usersTable");
+              uTable.innerHTML = usersData
+                .map((u) => {
+                  const isBanned = !!u.banned;
+                  const statusBadge = isBanned
+                    ? `<span class="badge" style="background:var(--danger);">Banned</span>`
+                    : `<span class="badge" style="background:var(--success);">Active</span>`;
+                  const btnText = isBanned ? "Unban" : "Ban";
+                  const btnClass = isBanned
+                    ? "btn btn-success"
+                    : "btn btn-danger";
+                  const btnIcon = isBanned
+                    ? "ph-arrow-u-up-left"
+                    : "ph-prohibit";
+                  return `
                     <tr>
                         <td>${u.name}</td>
                         <td>${u.email}</td>
                         <td><span class="badge" style="background:${u.role === "organizer" ? "var(--primary)" : "var(--text-muted)"}">${u.role}</span></td>
                         <td>${statusBadge}</td>
-                        <td><button class="${btnClass} btn-sm" onclick="app.handlers.toggleBan('${u.id}')"><i class="ph ${btnIcon}"></i> ${btnText}</button></td>
+                        <td><button class="${btnClass} btn-sm" onclick="app.handlers.toggleBan('${u.id}', ${!isBanned})"><i class="ph ${btnIcon}"></i> ${btnText}</button></td>
+                    </tr>`;
+                })
+                .join("");
+            }
+
+            // 4. Render Events Table
+            if (eRes.status === "success") {
+              const eTable = document.getElementById("eventsTable");
+              eTable.innerHTML = eRes.data
+                .map((e) => {
+                  let eventSales = 0;
+                  if (e.tickets)
+                    eventSales = e.tickets.reduce(
+                      (acc, t) => acc + t.price * t.sold,
+                      0,
+                    );
+                  const gross = eventSales * (1 + app.platformFee);
+                  return `
+                <tr>
+                    <td>${e.title}</td>
+                    <td style="color:var(--text-muted); font-size:0.9rem;">${e.organizerId || "Unknown"}</td>
+                    <td>${fmtMoney(gross)}</td>
+                    <td><button class="btn btn-danger btn-sm" onclick="app.handlers.deleteEvent('${e.id}')">Delete</button></td>
+                </tr>`;
+                })
+                .join("");
+            }
+
+            // 5. Fetch & Render WITHDRAWALS
+            const wRes = await app.api("getAllWithdrawals");
+            const wTable = document.getElementById("withdrawalsTableBody");
+
+            // IMPROVED ERROR REPORTING
+            if (wRes.status !== "success") {
+              console.error("Withdrawal Fetch Error:", wRes);
+              wTable.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--danger);">Error loading requests: ${wRes.message || "Unknown Action (Check GAS Deployment)"}</td></tr>`;
+            } else if (wRes.data.length === 0) {
+              wTable.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-muted); padding: 20px;">No payout requests yet.</td></tr>`;
+            } else {
+              wTable.innerHTML = wRes.data
+                .map((w) => {
+                  // Find user based on saved organizer_id
+                  const org = usersData.find(
+                    (u) =>
+                      u.id === w.organizerId || u.user_id === w.organizerId,
+                  );
+                  const orgName = org
+                    ? org.name
+                    : `<span style="color:var(--danger);">Unknown (ID: ${w.organizerId})</span>`;
+                  const maskedBtn = `<button class="masked-acct-btn" onclick="app.ui.toggleDetails('${w.id}')">**** ${w.accountNum ? w.accountNum.slice(-4) : "****"}</button>`;
+
+                  return `
+                    <tr>
+                        <td>${orgName}</td>
+                        <td>${w.bankName || "-"}</td>
+                        <td>${maskedBtn}</td>
+                        <td style="font-weight:600; color:var(--primary);">${fmtMoney(w.amount)}</td>
+                        <td>${new Date(w.date).toLocaleDateString()}</td>
+                        <td><span class="badge" style="background:${w.status === "Approved" ? "var(--success)" : "var(--text-muted)"}">${w.status}</span></td>
+                        <td>
+                            ${w.status !== "Approved" ? `<button class="btn btn-success btn-sm" onclick="app.handlers.approveWithdrawal('${w.id}')">Approve</button>` : `<span style="color:var(--success); font-weight:600;">Paid</span>`}
+                        </td>
                     </tr>
-                `;
-              })
-              .join("");
+                    <tr class="details-row" id="details-${w.id}">
+                        <td colspan="7" style="color:var(--text-muted); padding-left:12px;">
+                            <strong>Full Account Details:</strong><br>
+                            <span style="color:white; font-weight:600;">${w.accountNum}</span>
+                        </td>
+                    </tr>`;
+                })
+                .join("");
+            }
           },
 
           toggleDetails: (id) => {
-            // Find the details row and toggle visibility
             const row = document.getElementById(`details-${id}`);
             if (row) {
-              if (row.classList.contains("visible")) {
-                row.classList.remove("visible");
-              } else {
-                // Close other open details first
-                document
-                  .querySelectorAll(".details-row.visible")
-                  .forEach((el) => el.classList.remove("visible"));
-                row.classList.add("visible");
-              }
+              document
+                .querySelectorAll(".details-row.visible")
+                .forEach((el) => el.classList.remove("visible"));
+              row.classList.add("visible");
             }
+          },
+
+          toast: (msg, type = "info") => {
+            const c = document.getElementById("toast-container");
+            const t = document.createElement("div");
+            t.className = "toast";
+            const color =
+              type === "error"
+                ? "var(--danger)"
+                : type === "success"
+                  ? "var(--success)"
+                  : "var(--primary)";
+            t.style.borderLeftColor = color;
+            t.innerHTML = `<i class="ph ph-warning"></i> ${msg}`;
+            c.appendChild(t);
+            setTimeout(() => t.remove(), 3000);
           },
         },
 
         handlers: {
-          approveWithdrawal: (id) => {
+          approveWithdrawal: async (id) => {
             if (!confirm("Approve this payout request?")) return;
-
-            const withdrawals = app.get("eh_withdrawals");
-            const idx = withdrawals.findIndex((w) => w.id === id);
-
-            if (idx > -1) {
-              // Update status
-              withdrawals[idx].status = "Approved";
-              app.save("eh_withdrawals", withdrawals);
-              app.ui.loadDashboard();
+            const res = await app.api("approveWithdrawalAction", {
+              withdrawalId: id,
+            });
+            if (res.status === "success") {
               app.ui.toast("Payout Approved.");
+              app.ui.loadDashboard();
+            } else {
+              app.ui.toast(res.message, "error");
             }
           },
 
-          deleteEvent: (id) => {
+          deleteEvent: async (id) => {
             if (!confirm("Delete this event?")) return;
-            let evts = app.get("eh_events");
-            evts = evts.filter((e) => e.id !== id);
-            app.save("eh_events", evts);
-            app.ui.loadDashboard();
-          },
-          toggleBan: (id) => {
-            const users = app.get("eh_users");
-            const idx = users.findIndex((u) => u.id === id);
-            const user = users[idx];
-
-            if (
-              confirm(
-                `Are you sure you want to ${user.banned ? "unban" : "ban"} ${user.name}?`,
-              )
-            ) {
-              // Toggle ban status (do not delete)
-              const newBanStatus = !user.banned;
-              users[idx].banned = newBanStatus;
-              app.save("eh_users", users);
+            const res = await app.api("deleteEvent", { eventId: id });
+            if (res.status === "success") {
+              app.ui.toast("Event deleted.");
               app.ui.loadDashboard();
+            } else {
+              app.ui.toast(res.message, "error");
+            }
+          },
 
-              if (newBanStatus) {
-                app.ui.toast(`User ${user.name} has been banned.`, "error");
-              } else {
-                app.ui.toast(`User ${user.name} has been unbanned.`, "success");
-              }
+          toggleBan: async (id, newBanStatus) => {
+            const actionName = newBanStatus ? "ban" : "unban";
+            if (!confirm(`Are you sure you want to ${actionName} this user?`))
+              return;
+            const res = await app.api("updateUserBanAction", {
+              userId: id,
+              banned: newBanStatus,
+            });
+            if (res.status === "success") {
+              app.ui.toast(
+                `User ${actionName}ned successfully.`,
+                newBanStatus ? "error" : "success",
+              );
+              app.ui.loadDashboard();
+            } else {
+              app.ui.toast(res.message, "error");
             }
           },
         },
@@ -722,18 +691,8 @@
             }
           },
         },
-
-        toast: (msg, type) => {
-          const c = document.getElementById("toast-container");
-          const t = document.createElement("div");
-          t.className = "toast";
-          t.innerHTML = `<i class="ph ph-warning"></i> ${msg}`;
-          c.appendChild(t);
-          setTimeout(() => t.remove(), 3000);
-        },
       };
 
-      // Init
       document.addEventListener("DOMContentLoaded", app.init);
     </script>
   </body>

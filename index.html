@@ -13,6 +13,9 @@
       rel="stylesheet"
     />
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- HTML2Canvas Library for Image Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
     <style>
       :root {
         --primary: #6366f1;
@@ -403,32 +406,9 @@
         max-height: 90vh;
         overflow-y: auto;
         background: var(--bg-dark);
-      }
-      .ticket-type-row {
-        background: rgba(255, 255, 255, 0.03);
         border: 1px solid var(--border);
-        padding: 16px;
-        border-radius: 8px;
-        margin-bottom: 12px;
-        position: relative;
-        animation: fadeIn 0.3s ease;
       }
-      .remove-ticket-btn {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background: rgba(255, 255, 255, 0.1);
-        color: var(--danger);
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        z-index: 5;
-      }
-      /* NEW: Ticket Visual Styles */
+      /* Ticket Visual Styles */
       .tickets-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
@@ -442,6 +422,11 @@
         display: flex;
         position: relative;
         box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.3);
+        transition: transform 0.2s;
+        cursor: pointer;
+      }
+      .ticket-visual:hover {
+        transform: scale(1.02);
       }
       .tv-main {
         flex: 1;
@@ -607,6 +592,31 @@
         color: var(--primary);
         background: rgba(99, 102, 241, 0.1);
       }
+
+      /* Ticket Detail Modal Specifics */
+      #ticketDetailModal .modal {
+        max-width: 800px;
+        background: var(--bg-dark);
+      }
+      #ticketDetailModal .modal-content {
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .ticket-action-bar {
+        display: flex;
+        gap: 12px;
+        width: 100%;
+        margin-top: 20px;
+        justify-content: center;
+      }
+      /* Larger Ticket for Modal */
+      .ticket-visual-large {
+        transform: scale(1.2);
+        margin: 40px 0;
+      }
+
       @media (max-width: 768px) {
         body {
           padding-bottom: 70px;
@@ -675,6 +685,19 @@
           height: 60px;
           margin-bottom: 0;
         }
+        /* Ticket Detail Modal Mobile */
+        #ticketDetailModal .modal {
+          height: 90vh;
+          transform: translateY(100%);
+        }
+        #ticketDetailModal .modal-overlay.open .modal {
+          transform: translateY(0);
+        }
+        .ticket-visual-large {
+          transform: scale(1); /* Reset scale on mobile, let modal scroll */
+          width: 100%;
+          margin: 20px 0;
+        }
       }
     </style>
   </head>
@@ -692,6 +715,7 @@
         EventHub
       </h2>
     </div>
+
     <!-- HEADER -->
     <header>
       <div class="container">
@@ -709,16 +733,13 @@
             <div id="loggedOutNav" style="display: flex; gap: 10px">
               <div
                 class="btn btn-secondary"
-                onclick="app.ui.openModal('authModal')"
+                onclick="app.ui.openAuthModal('login')"
               >
                 Login
               </div>
               <div
                 class="btn btn-primary"
-                onclick="
-                  app.ui.toggleAuthMode();
-                  app.ui.openModal('authModal');
-                "
+                onclick="app.ui.openAuthModal('signup')"
               >
                 Sign Up
               </div>
@@ -748,6 +769,7 @@
         </nav>
       </div>
     </header>
+
     <!-- MOBILE NAV -->
     <div class="mobile-bottom-nav">
       <div class="mobile-nav-item active" onclick="app.router.navigate('home')">
@@ -766,13 +788,15 @@
       <div
         class="mobile-nav-item"
         id="mobileProfileBtn"
-        onclick="app.ui.openModal('authModal')"
+        onclick="app.ui.openAuthModal('login')"
       >
         <i class="ph ph-user"></i><span>Profile</span>
       </div>
     </div>
+
     <main id="app" class="container"></main>
     <div id="toast-container"></div>
+
     <!-- 1. AUTH MODAL -->
     <div class="modal-overlay" id="authModal">
       <div class="card modal">
@@ -811,6 +835,7 @@
               placeholder="•••••"
             />
           </div>
+          <!-- Fields for Sign Up Only -->
           <div id="signupFields" style="display: none">
             <div class="form-group">
               <label>Full Name</label
@@ -896,6 +921,7 @@
         </p>
       </div>
     </div>
+
     <!-- 2. CHECKOUT MODAL -->
     <div class="modal-overlay" id="checkoutModal">
       <div class="card modal">
@@ -960,6 +986,7 @@
         </form>
       </div>
     </div>
+
     <!-- 3. ORGANIZER CREATE/EDIT MODAL -->
     <div class="modal-overlay" id="eventModal">
       <div class="modal card">
@@ -1002,7 +1029,7 @@
             <label>Location</label
             ><input type="text" id="eventLocation" required />
           </div>
-          <!-- ADD THIS SECTION: Image Upload -->
+          <!-- Image Upload -->
           <div class="form-group">
             <label>Event Image</label>
             <input
@@ -1011,7 +1038,6 @@
               accept="image/*"
               onchange="app.handlers.previewImage(this)"
             />
-            <!-- Image Preview Area -->
             <div
               id="imagePreviewContainer"
               style="margin-top: 10px; display: none; position: relative"
@@ -1079,6 +1105,7 @@
         </form>
       </div>
     </div>
+
     <!-- 4. WITHDRAWAL MODAL -->
     <div class="modal-overlay" id="withdrawalModal">
       <div class="modal card">
@@ -1099,7 +1126,7 @@
         </div>
         <form onsubmit="app.handlers.requestWithdrawal(event)">
           <div class="form-group">
-            <label>Available to Withdraw ($)</label
+            <label>Available to Withdraw (₦)</label
             ><input
               type="number"
               id="withdrawalAmountInput"
@@ -1114,7 +1141,7 @@
               type="text"
               name="bankName"
               required
-              placeholder="e.g. Chase Bank"
+              placeholder="e.g. Access Bank"
             />
           </div>
           <div class="form-group">
@@ -1132,16 +1159,90 @@
         </form>
       </div>
     </div>
+
+    <!-- 5. TICKET DETAIL / SHARE MODAL -->
+    <div class="modal-overlay" id="ticketDetailModal">
+      <div class="modal">
+        <div class="modal-content">
+          <div style="width: 100%; display: flex; justify-content: flex-end">
+            <button
+              class="btn btn-secondary"
+              style="padding: 8px"
+              onclick="app.ui.closeModal('ticketDetailModal')"
+            >
+              <i class="ph ph-x"></i>
+            </button>
+          </div>
+          <!-- Container to capture for Image -->
+          <div
+            id="ticketForCapture"
+            style="position: relative; transform-origin: center top"
+          >
+            <!-- Ticket will be injected here -->
+          </div>
+
+          <div class="ticket-action-bar">
+            <button
+              class="btn btn-primary"
+              onclick="app.handlers.downloadTicket()"
+            >
+              <i class="ph ph-download-simple"></i> Download
+            </button>
+            <button
+              class="btn btn-success"
+              onclick="app.handlers.shareTicket()"
+            >
+              <i class="ph ph-share-network"></i> Share Image
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script>
       // ==========================================
       // CONFIGURATION
       // ==========================================
       const API_URL =
         "https://script.google.com/macros/s/AKfycbwC84QF4q6lPfTDsbnnWbWfH0nHX9k0ID_iNdeyPoE3CQ-YA38K5lC_Yjr2h9cMHSP8cg/exec";
+
+      // Currency to NGN
       const fmtMoney = (amount) => {
         const num = parseFloat(amount) || 0;
-        return "$" + num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        return "₦" + num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
       };
+
+      // ==========================================
+      // IMAGE COMPRESSION HELPER
+      // ==========================================
+      const compressImage = (file) => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(file);
+          reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+              let width = img.width;
+              let height = img.height;
+              const MAX_WIDTH = 400;
+              if (width > MAX_WIDTH) {
+                height *= MAX_WIDTH / width;
+                width = MAX_WIDTH;
+              }
+              const canvas = document.createElement("canvas");
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext("2d");
+              ctx.drawImage(img, 0, 0, width, height);
+              resolve(canvas.toDataURL("image/jpeg", 0.5));
+            };
+            img.onerror = (err) => reject(err);
+          };
+          reader.onerror = (err) => reject(err);
+        });
+      };
+
       // ==========================================
       // API HELPER
       // ==========================================
@@ -1149,7 +1250,6 @@
         post: async (action, data = {}) => {
           try {
             const controller = new AbortController();
-            // Increased timeout to 30 seconds for GAS cold starts
             const timeoutId = setTimeout(() => controller.abort(), 30000);
             const response = await fetch(API_URL, {
               method: "POST",
@@ -1188,6 +1288,7 @@
           return [];
         },
       };
+
       // ==========================================
       // APPLICATION LOGIC
       // ==========================================
@@ -1199,7 +1300,7 @@
           currentEventId: null,
           currentEventData: null,
           currentUser: JSON.parse(localStorage.getItem("eh_session")) || null,
-          isAdmin: false,
+          currentTicketData: null, // Holds data for ticket modal
         },
         init: async () => {
           app.ui.checkSession();
@@ -1347,55 +1448,33 @@
           },
           renderMyTickets: async (container) => {
             if (!app.state.currentUser) {
-              app.ui.openModal("authModal");
+              app.ui.openAuthModal("login");
               return;
             }
             const user = app.state.currentUser;
             const buyerId = user.id || user.user_id || null;
-            console.log("My Tickets → current user:", user);
-            console.log("My Tickets → buyerId being sent:", buyerId);
             if (!buyerId) {
-              container.innerHTML = `
-            <div class="view active">
-              <h1>My Tickets</h1>
-              <div class="card" style="text-align:center; padding:40px; color:#f87171;">
-                <p>Error: No user ID found. Please log out and log in again.</p>
-              </div>
-            </div>`;
+              container.innerHTML = `<div class="view active"><h1>My Tickets</h1><div class="card" style="text-align:center; padding:40px; color:#f87171;"><p>Error: No user ID found. Please log out and log in again.</p></div></div>`;
               return;
             }
             container.innerHTML = `<div class="page-loader"><div class="loader-ring" style="width:40px; height:40px; margin:0;"></div><span style="margin-left:10px; color:var(--text-muted);">Loading Tickets...</span></div>`;
             const purchaseRes = await api.post("getPurchases", { buyerId });
-            console.log("getPurchases RESPONSE:", purchaseRes);
             if (
               !purchaseRes ||
               purchaseRes.status !== "success" ||
               !Array.isArray(purchaseRes.data)
             ) {
-              container.innerHTML = `
-            <div class="view active">
-              <h1>My Tickets</h1>
-              <div class="card" style="padding:20px; color:#f87171;">
-                <p>Could not load your tickets.</p>
-                <pre style="font-size:0.85rem; background:#1e293b; padding:12px; border-radius:8px; overflow:auto;">${JSON.stringify(purchaseRes, null, 2)}</pre>
-              </div>
-            </div>`;
+              container.innerHTML = `<div class="view active"><h1>My Tickets</h1><div class="card" style="padding:20px; color:#f87171;"><p>Could not load your tickets.</p></div></div>`;
               return;
             }
             if (purchaseRes.data.length === 0) {
-              container.innerHTML = `
-            <div class="view active">
-              <h1>My Tickets</h1>
-              <div class="card" style="text-align:center; padding:40px; color:var(--text-muted);">
-                <i class="ph ph-ticket" style="font-size:3rem; margin-bottom:10px;"></i>
-                <p>You haven't purchased any tickets yet.</p>
-                <button class="btn btn-primary" style="margin-top:20px;" onclick="app.router.navigate('home')">Browse Events</button>
-              </div>
-            </div>`;
+              container.innerHTML = `<div class="view active"><h1>My Tickets</h1><div class="card" style="text-align:center; padding:40px; color:var(--text-muted);"><i class="ph ph-ticket" style="font-size:3rem; margin-bottom:10px;"></i><p>You haven't purchased any tickets yet.</p><button class="btn btn-primary" style="margin-top:20px;" onclick="app.router.navigate('home')">Browse Events</button></div></div>`;
               return;
             }
             const eventsRes = await api.getEventsCached();
             const eventsMap = new Map(eventsRes.map((e) => [e.id, e]));
+
+            // Generate HTML for tickets
             const ticketsHTML = purchaseRes.data
               .map((p) => {
                 const evt = eventsMap.get(p.event_id);
@@ -1406,21 +1485,29 @@
                   type: p.ticket_type,
                 });
                 const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrData)}`;
+
+                // Store data for the modal in a data attribute
+                const ticketDataStr = encodeURIComponent(
+                  JSON.stringify({
+                    title: evt ? evt.title : "Unknown Event",
+                    date: evt ? new Date(evt.date).toLocaleDateString() : "TBD",
+                    type: p.ticket_type,
+                    qty: p.quantity,
+                    total: fmtMoney(p.total_paid),
+                    qrData: qrData,
+                    id: p.purchase_id,
+                  }),
+                );
+
                 return `
-              <div class="ticket-visual">
+              <div class="ticket-visual" onclick="app.handlers.openTicketDetail('${ticketDataStr}')">
                 <div class="tv-cutout"></div>
                 <div class="tv-main">
                   <div>
                     <div class="tv-label">EVENT</div>
                     <h3 class="tv-title">${evt ? evt.title : "Unknown Event"}</h3>
-                    <div class="tv-row">
-                      <i class="ph ph-calendar-blank"></i>
-                      <span>${evt ? new Date(evt.date).toLocaleDateString() : "TBD"}</span>
-                    </div>
-                    <div class="tv-row">
-                      <i class="ph ph-ticket"></i>
-                      <span>${p.ticket_type} × ${p.quantity}</span>
-                    </div>
+                    <div class="tv-row"><i class="ph ph-calendar-blank"></i><span>${evt ? new Date(evt.date).toLocaleDateString() : "TBD"}</span></div>
+                    <div class="tv-row"><i class="ph ph-ticket"></i><span>${p.ticket_type} × ${p.quantity}</span></div>
                   </div>
                   <div style="margin-top:20px;">
                     <div class="tv-label">TOTAL PAID</div>
@@ -1429,93 +1516,55 @@
                 </div>
                 <div class="tv-stub">
                   <img src="${qrUrl}" alt="QR Code" class="tv-qr" />
-                  <div class="tv-label">Scan Entry</div>
+                  <div class="tv-label">Tap to View</div>
                   <div class="tv-value" style="font-size:0.75rem; color:#64748b;">ID: ${p.purchase_id.slice(-6)}</div>
                 </div>
-              </div>
-            `;
+              </div>`;
               })
               .join("");
-            container.innerHTML = `
-          <div class="view active">
-            <h1>My Tickets</h1>
-            <div class="tickets-grid">
-              ${ticketsHTML}
-            </div>
-          </div>`;
+            container.innerHTML = `<div class="view active"><h1>My Tickets</h1><div style="margin-bottom: 10px; color: var(--text-muted); font-size: 0.9rem; text-align: right;">Tap a ticket to view/share</div><div class="tickets-grid">${ticketsHTML}</div></div>`;
           },
           renderOrganizerDashboard: async (container) => {
             const user = app.state.currentUser;
-
-            // Safety check: If user is not logged in, redirect to home
             if (!user) {
               app.router.navigate("home");
               return;
             }
+            container.innerHTML = `<div class="view active"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;"><h1>Organizer Dashboard</h1><button class="btn btn-primary" onclick="app.handlers.openEventModal()"><i class="ph ph-plus"></i> Create Event</button></div><div class="page-loader"><div class="loader-ring" style="width:30px; height:30px; margin:0;"></div><span style="margin-left:10px; color:var(--text-muted);">Loading...</span></div></div>`;
 
-            container.innerHTML = `
-          <div class="view active">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-              <h1>Organizer Dashboard</h1>
-              <button class="btn btn-primary" onclick="app.handlers.openEventModal()">
-                <i class="ph ph-plus"></i> Create Event
-              </button>
-            </div>
-            <div class="page-loader">
-              <div class="loader-ring" style="width:30px; height:30px; margin:0;"></div>
-              <span style="margin-left:10px; color:var(--text-muted);">Loading...</span>
-            </div>
-          </div>
-        `;
-
-            // Fetch data
             const [eventsRes, wRes, pRes] = await Promise.all([
               api.post("getEvents"),
               api.post("getWithdrawals", {
-                organizerId: user.id || user.user_id,
-              }), // Fallback added
-              api.post("getPurchases"), // no buyerId -> returns ALL purchases
+                organizerId:
+                  app.state.currentUser.id || app.state.currentUser.user_id,
+              }),
+              api.post("getPurchases"),
             ]);
-
             const allEvents = eventsRes?.data ?? [];
             const withdrawals = wRes?.data ?? [];
             const allPurchases = pRes?.data ?? [];
-
-            // FIX: Normalize Organizer ID for filtering (Handle both 'id' and 'user_id' properties)
             const currentOrganizerId = String(user.id || user.user_id || "");
-
-            console.log("Debug: Organizer ID is:", currentOrganizerId);
-            console.log("Debug: Total Events found:", allEvents.length);
-
-            const myEvents = allEvents.filter((e) => {
-              // Ensure we are comparing strings
-              const eventOrganizerId = String(e.organizerId || "");
-              return eventOrganizerId === currentOrganizerId;
-            });
-
-            console.log("Debug: My Events found:", myEvents.length);
-
+            const myEvents = allEvents.filter(
+              (e) => String(e.organizerId || "") === currentOrganizerId,
+            );
             const myEventIds = myEvents.map((e) => e.id);
-
-            // Calculate stats
             const mySales = allPurchases.filter((p) =>
               myEventIds.includes(p.event_id),
             );
 
-            // Gross Revenue = Total money earned from ticket sales
-            const grossRevenue = mySales.reduce(
-              (sum, p) => sum + Number(p.total_paid || 0),
-              0,
-            );
+            // Calculate Organizer Revenue (Excluding the 5% fee)
+            const grossRevenue = mySales.reduce((sum, p) => {
+              const total = Number(p.total_paid || 0);
+              const organizerShare = p.subtotal
+                ? Number(p.subtotal)
+                : total / 1.05;
+              return sum + organizerShare;
+            }, 0);
 
-            // Total Paid Out = Sum of ALL (Pending + Approved) withdrawals
             const totalPaidOut = withdrawals
               .filter((w) => w.status === "Approved" || w.status === "Pending")
               .reduce((sum, w) => sum + Number(w.amount || 0), 0);
-
-            // Balance = Earnings - Withdrawals (This goes to zero when you request payout)
             const balance = grossRevenue - totalPaidOut;
-
             const totalTicketsSold = myEvents.reduce(
               (acc, e) =>
                 acc + e.tickets.reduce((a, t) => a + (t.sold || 0), 0),
@@ -1526,44 +1575,22 @@
           <div class="view active">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
               <h1>Organizer Dashboard</h1>
-              <button class="btn btn-primary" onclick="app.handlers.openEventModal()">
-                <i class="ph ph-plus"></i> Create Event
-              </button>
+              <button class="btn btn-primary" onclick="app.handlers.openEventModal()"><i class="ph ph-plus"></i> Create Event</button>
             </div>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom:30px;">
-              <div class="card">
-                <h3>Available Balance</h3>
-                <h2 style="color:var(--primary); margin:10px 0;">${fmtMoney(balance)}</h2>
-              </div>
-              <div class="card">
-                <h3>Total Tickets Sold</h3>
-                <h2 style="margin:10px 0;">${totalTicketsSold}</h2>
-              </div>
-              <!-- FIX: Shows Amount Paid Out, not just count -->
-              <div class="card" style="border-color:var(--accent); background:rgba(236,72,153,0.05)">
-                <h3>Total Paid Out</h3>
-                <h2 style="color:var(--accent); margin:10px 0;">${fmtMoney(totalPaidOut)}</h2>
-              </div>
+              <div class="card"><h3>Available Balance</h3><h2 style="color:var(--primary); margin:10px 0;">${fmtMoney(balance)}</h2></div>
+              <div class="card"><h3>Total Tickets Sold</h3><h2 style="margin:10px 0;">${totalTicketsSold}</h2></div>
+              <div class="card" style="border-color:var(--accent); background:rgba(236,72,153,0.05)"><h3>Total Paid Out</h3><h2 style="color:var(--accent); margin:10px 0;">${fmtMoney(totalPaidOut)}</h2></div>
             </div>
-            <!-- My Events Table -->
             <div class="card">
               <h2>My Events</h2>
               ${
                 myEvents.length === 0
-                  ? `<p style="color:var(--text-muted); text-align:center; padding:40px 0;">
-                       You haven't created any events yet.
-                     </p>`
+                  ? '<p style="color:var(--text-muted); text-align:center; padding:40px 0;">You haven\'t created any events yet.</p>'
                   : `
               <div class="table-wrapper">
                 <table>
-                  <thead>
-                    <tr>
-                      <th>Event</th>
-                      <th>Date</th>
-                      <th>Sales</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
+                  <thead><tr><th>Event</th><th>Date</th><th>Sales</th><th>Action</th></tr></thead>
                   <tbody>
                     ${myEvents
                       .map((e) => {
@@ -1576,31 +1603,7 @@
                           0,
                         );
                         const isSoldOut = totalQty > 0 && sold >= totalQty;
-                        return `
-                        <tr>
-                          <td>
-                            <strong>${e.title}</strong>
-                            ${
-                              isSoldOut
-                                ? `<span class="badge badge-sold" style="margin-left:8px;">Sold Out</span>`
-                                : `<span class="badge badge-open" style="margin-left:8px;">Active</span>`
-                            }
-                          </td>
-                          <td>${new Date(e.date).toLocaleDateString("en-GB")}</td>
-                          <td>${sold} / ${totalQty}</td>
-                          <td style="white-space:nowrap;">
-                            <button class="btn btn-secondary btn-sm"
-                              onclick="app.handlers.editEvent('${e.id}')"
-                              style="margin-right:8px;">
-                              Edit
-                            </button>
-                            <button class="btn btn-danger btn-sm"
-                              onclick="app.handlers.deleteEvent('${e.id}')">
-                              Delete
-                            </button>
-                          </td>
-                        </tr>
-                      `;
+                        return `<tr><td><strong>${e.title}</strong>${isSoldOut ? '<span class="badge badge-sold" style="margin-left:8px;">Sold Out</span>' : '<span class="badge badge-open" style="margin-left:8px;">Active</span>'}</td><td>${new Date(e.date).toLocaleDateString("en-GB")}</td><td>${sold} / ${totalQty}</td><td style="white-space:nowrap;"><button class="btn btn-secondary btn-sm" onclick="app.handlers.editEvent('${e.id}')" style="margin-right:8px;">Edit</button><button class="btn btn-danger btn-sm" onclick="app.handlers.deleteEvent('${e.id}')">Delete</button></td></tr>`;
                       })
                       .join("")}
                   </tbody>
@@ -1608,7 +1611,6 @@
               </div>`
               }
             </div>
-            <!-- Payout History -->
             <div class="card">
               <h2>Payout History</h2>
               ${
@@ -1619,41 +1621,16 @@
                   <table>
                     <thead><tr><th>Amount</th><th>Bank</th><th>Account</th><th>Status</th><th>Date</th></tr></thead>
                     <tbody>
-                      ${withdrawals
-                        .map(
-                          (w) => `
-                        <tr>
-                          <td>${fmtMoney(w.amount)}</td>
-                          <td>${w.bankName || "-"}</td>
-                          <td>${w.accountNum || "-"}</td>
-                          <td>
-                            <span class="badge" style="background:${
-                              w.status === "Approved"
-                                ? "var(--success)"
-                                : w.status === "Pending"
-                                  ? "#f59e0b"
-                                  : "var(--text-muted)"
-                            }">${w.status}</span>
-                          </td>
-                          <td>${new Date(w.date).toLocaleDateString("en-GB")}</td>
-                        </tr>
-                      `,
-                        )
-                        .join("")}
+                      ${withdrawals.map((w) => `<tr><td>${fmtMoney(w.amount)}</td><td>${w.bankName || "-"}</td><td>${w.accountNum || "-"}</td><td><span class="badge" style="background:${w.status === "Approved" ? "var(--success)" : w.status === "Pending" ? "#f59e0b" : "var(--text-muted)"}">${w.status}</span></td><td>${new Date(w.date).toLocaleDateString("en-GB")}</td></tr>`).join("")}
                     </tbody>
                   </table>
                 </div>`
               }
               <div style="margin-top:20px; text-align:right;">
-                <button class="btn btn-primary"
-                  onclick="app.handlers.openWithdrawalModal(${balance})"
-                  ${balance <= 0 ? "disabled" : ""}>
-                  Request Withdrawal
-                </button>
+                <button class="btn btn-primary" onclick="app.handlers.openWithdrawalModal(${balance})" ${balance <= 0 ? "disabled" : ""}>Request Withdrawal</button>
               </div>
             </div>
-          </div>
-        `;
+          </div>`;
           },
         },
         handlers: {
@@ -1661,10 +1638,7 @@
             const ticket = app.state.currentEventData.tickets.find(
               (t) => String(t.ticketId) == String(ticketId),
             );
-            if (!ticket) {
-              console.error("Ticket not found for ID:", ticketId);
-              return;
-            }
+            if (!ticket) return;
             const current = app.state.cart[ticketId] || 0;
             const newQty = current + change;
             if (newQty < 0) return;
@@ -1717,7 +1691,12 @@
           },
           initBuy: () => {
             if (!app.state.currentUser) {
-              app.ui.showToast("Please login first", "info");
+              app.ui.showToast(
+                "Please create an account or login to purchase tickets.",
+                "info",
+              );
+              app.state.isLoginMode = false;
+              app.ui.toggleAuthMode();
               app.ui.openModal("authModal");
               return;
             }
@@ -1728,11 +1707,7 @@
                 const ticket = app.state.currentEventData.tickets.find(
                   (t) => String(t.ticketId) == String(tid),
                 );
-                if (!ticket) {
-                  console.error("Ticket not found during checkout:", tid);
-                  return;
-                }
-                subtotal += ticket.price * qty;
+                if (ticket) subtotal += ticket.price * qty;
               }
             });
             const fee = subtotal * app.state.feePercentage;
@@ -1815,7 +1790,6 @@
             const container = document.getElementById("ticketTypesContainer");
             container.innerHTML = "";
             event.tickets.forEach((t) => app.handlers.addTicketRow(t));
-            // Preview existing image
             const img = document.getElementById("imgPreview");
             const previewContainer = document.getElementById(
               "imagePreviewContainer",
@@ -1856,7 +1830,6 @@
               .value.trim();
             const category = document.getElementById("eventCategory").value;
             const fileInput = document.getElementById("eventImageInput");
-            // Organizer ID check
             if (
               !app.state.currentUser ||
               !(app.state.currentUser.id || app.state.currentUser.user_id)
@@ -1870,25 +1843,20 @@
             }
             const organizerId =
               app.state.currentUser.id || app.state.currentUser.user_id;
-            // --- IMAGE HANDLING LOGIC ---
             let imagePayload = "";
             if (fileInput.files.length > 0) {
-              // 1. New file selected -> Convert to Base64
               try {
-                imagePayload = await new Promise((resolve, reject) => {
-                  const reader = new FileReader();
-                  reader.onload = () => resolve(reader.result);
-                  reader.onerror = reject;
-                  reader.readAsDataURL(fileInput.files[0]);
-                });
+                imagePayload = await compressImage(fileInput.files[0]);
               } catch (err) {
-                app.ui.showToast("Failed to process image.", "error");
+                console.error(err);
+                app.ui.showToast(
+                  "Failed to process image. Try a smaller image.",
+                  "error",
+                );
                 app.ui.setLoading(btn, false);
                 return;
               }
             } else if (app.state.isEditing) {
-              // 2. Editing and NO new file -> Keep existing image
-              // We need to get the existing event data to preserve its image URL
               const res = await api.post("getEvents");
               const existingEvent = res.data.find(
                 (ev) => ev.id === app.state.editingId,
@@ -1896,11 +1864,9 @@
               if (existingEvent && existingEvent.image) {
                 imagePayload = existingEvent.image;
               } else {
-                // Fallback if existing event has no image
                 imagePayload = `https://picsum.photos/seed/${title || Date.now()}/400/225`;
               }
             } else {
-              // 3. Creating new event and NO file -> Use Placeholder
               imagePayload = `https://picsum.photos/seed/${title || Date.now()}/400/225`;
             }
             const ticketRows = document.querySelectorAll(".ticket-type-row");
@@ -1919,7 +1885,7 @@
               category,
               tickets,
               organizer_id: organizerId,
-              imageBase64: imagePayload, // Send Base64 string or URL
+              imageBase64: imagePayload,
             };
             let res;
             if (app.state.isEditing) {
@@ -1944,24 +1910,25 @@
               app.ui.showToast(res?.message || "Failed to save event", "error");
             }
           },
-          // --- ADD THESE NEW HELPER FUNCTIONS FOR IMAGE PREVIEW ---
-          previewImage: (input) => {
+          previewImage: async (input) => {
             if (input.files && input.files[0]) {
-              const reader = new FileReader();
-              reader.onload = (e) => {
+              try {
+                const compressedData = await compressImage(input.files[0]);
                 const img = document.getElementById("imgPreview");
                 const container = document.getElementById(
                   "imagePreviewContainer",
                 );
-                img.src = e.target.result;
+                img.src = compressedData;
                 container.style.display = "block";
-              };
-              reader.readAsDataURL(input.files[0]);
+              } catch (err) {
+                console.error(err);
+                app.ui.showToast("Error previewing image", "error");
+              }
             }
           },
           clearImage: () => {
             const input = document.getElementById("eventImageInput");
-            input.value = ""; // Reset file input
+            input.value = "";
             document.getElementById("imagePreviewContainer").style.display =
               "none";
           },
@@ -1979,16 +1946,116 @@
           requestWithdrawal: async (e) => {
             e.preventDefault();
             const fd = new FormData(e.target);
+
+            // FIX: Robust ID retrieval
+            const organizerId =
+              app.state.currentUser.id || app.state.currentUser.user_id;
+
+            if (!organizerId) {
+              app.ui.showToast(
+                "Error: User not identified. Please log in again.",
+                "error",
+              );
+              return;
+            }
+
             const res = await api.post("requestWithdrawal", {
-              organizerId: app.state.currentUser.id,
+              organizerId: organizerId, // Send the explicitly found ID
               amount: fd.get("amount"),
               bankName: fd.get("bankName"),
               accountNum: fd.get("accountNum"),
             });
+
             if (res) {
               app.ui.closeModal("withdrawalModal");
               app.ui.showToast("Request Sent!");
               app.router.navigate("organizer");
+            }
+          },
+          // NEW: Ticket Share Handlers
+          openTicketDetail: (dataStr) => {
+            const data = JSON.parse(decodeURIComponent(dataStr));
+            app.state.currentTicketData = data;
+            const container = document.getElementById("ticketForCapture");
+
+            // Generate high-res QR
+            const highResQR = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(data.qrData)}`;
+
+            // Build the HTML for the large ticket
+            container.innerHTML = `
+                <div class="ticket-visual ticket-visual-large" style="width: 600px; height: 300px;">
+                    <div class="tv-cutout" style="left: 200px; width: 40px; height: 40px;"></div>
+                    <div class="tv-main" style="padding: 40px; font-size: 1.2rem;">
+                        <div>
+                            <div class="tv-label" style="font-size: 0.9rem;">EVENT TICKET</div>
+                            <h3 class="tv-title" style="font-size: 2rem;">${data.title}</h3>
+                            <div class="tv-row" style="font-size: 1.2rem; gap: 12px;"><i class="ph ph-calendar-blank" style="font-size: 1.4rem;"></i><span>${data.date}</span></div>
+                            <div class="tv-row" style="font-size: 1.2rem; gap: 12px;"><i class="ph ph-ticket" style="font-size: 1.4rem;"></i><span>${data.type} × ${data.qty}</span></div>
+                        </div>
+                        <div style="margin-top: 30px;">
+                            <div class="tv-label" style="font-size: 0.9rem;">TOTAL PAID</div>
+                            <div class="tv-value" style="font-size: 1.5rem; color:var(--primary);">${data.total}</div>
+                        </div>
+                    </div>
+                    <div class="tv-stub" style="width: 220px; padding: 30px 10px;">
+                        <img src="${highResQR}" alt="QR Code" style="width: 180px; height: 180px; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px;" />
+                        <div class="tv-label" style="font-size: 0.8rem; margin-top: 15px;">SCAN ENTRY</div>
+                    </div>
+                </div>
+              `;
+            app.ui.openModal("ticketDetailModal");
+          },
+          downloadTicket: async () => {
+            const element = document.getElementById("ticketForCapture");
+            app.ui.showToast("Generating image...", "info");
+            try {
+              const canvas = await html2canvas(element, {
+                scale: 2,
+                backgroundColor: "#ffffff",
+              });
+              const link = document.createElement("a");
+              link.download = `ticket-${app.state.currentTicketData.id}.png`;
+              link.href = canvas.toDataURL();
+              link.click();
+            } catch (err) {
+              console.error(err);
+              app.ui.showToast("Failed to download ticket.", "error");
+            }
+          },
+          shareTicket: async () => {
+            const element = document.getElementById("ticketForCapture");
+            app.ui.showToast("Preparing share...", "info");
+            try {
+              const canvas = await html2canvas(element, {
+                scale: 2,
+                backgroundColor: "#ffffff",
+              });
+              canvas.toBlob(async (blob) => {
+                const file = new File(
+                  [blob],
+                  `ticket-${app.state.currentTicketData.id}.png`,
+                  { type: "image/png" },
+                );
+                if (navigator.share && navigator.canShare({ files: [file] })) {
+                  try {
+                    await navigator.share({
+                      title: "My Event Ticket",
+                      text: `Ticket for ${app.state.currentTicketData.title}`,
+                      files: [file],
+                    });
+                  } catch (err) {
+                    // User likely cancelled
+                  }
+                } else {
+                  app.ui.showToast(
+                    "Sharing not supported on this device/browser. Please download instead.",
+                    "info",
+                  );
+                }
+              });
+            } catch (err) {
+              console.error(err);
+              app.ui.showToast("Failed to share ticket.", "error");
             }
           },
         },
@@ -2014,12 +2081,10 @@
             }
             const res = await api.post(endpoint, payload);
             if (res && res.status === "success" && res.user) {
-              // Normalize: make sure there's always a .id property
               const normalizedUser = {
                 ...res.user,
-                id: res.user.id || res.user.user_id || String(Date.now()), // fallback if both missing
+                id: res.user.id || res.user.user_id || String(Date.now()),
               };
-              // Optional: remove password if it came back (security)
               if (normalizedUser.password) delete normalizedUser.password;
               app.state.currentUser = normalizedUser;
               localStorage.setItem(
@@ -2028,11 +2093,21 @@
               );
               app.ui.closeModal("authModal");
               app.ui.checkSession();
-              // Redirect based on role
-              if (normalizedUser.role === "organizer") {
-                app.router.navigate("organizer");
+
+              // SMART REDIRECT LOGIC:
+              const hasItemsInCart = Object.values(app.state.cart).some(
+                (qty) => qty > 0,
+              );
+              if (hasItemsInCart && app.state.currentEventId) {
+                app.ui.showToast("Account created! Proceeding to checkout...");
+                app.ui.openModal("checkoutModal");
               } else {
-                app.router.navigate("home");
+                // Normal Redirect
+                if (normalizedUser.role === "organizer") {
+                  app.router.navigate("organizer");
+                } else {
+                  app.router.navigate("home");
+                }
               }
               app.ui.showToast(
                 "Welcome back, " + (normalizedUser.name || "User") + "!",
@@ -2064,6 +2139,11 @@
           openModal: (id) => document.getElementById(id).classList.add("open"),
           closeModal: (id) =>
             document.getElementById(id).classList.remove("open"),
+          openAuthModal: (mode = "login") => {
+            app.state.isLoginMode = mode === "login";
+            app.ui.toggleAuthMode();
+            app.ui.openModal("authModal");
+          },
           toggleAuthMode: () => {
             app.state.isLoginMode = !app.state.isLoginMode;
             const isLogin = app.state.isLoginMode;
@@ -2101,17 +2181,25 @@
           checkSession: () => {
             const user = app.state.currentUser;
             if (user) {
+              // FIX: Normalize ID. If 'id' is missing but 'user_id' exists, use it.
+              if (!user.id && user.user_id) {
+                user.id = user.user_id;
+              }
+
               document.getElementById("loggedOutNav").style.display = "none";
               document.getElementById("loggedInNav").style.display = "flex";
               document.getElementById("userNameDisplay").innerText = user.name;
+
               const roleBtn = document.getElementById("roleBtn");
               const mobileDash = document.getElementById("mobileDashBtn");
               const mobileTickets = document.getElementById("mobileTicketsBtn");
               const mobileProfile = document.getElementById("mobileProfileBtn");
+
               mobileTickets.onclick = () => app.router.navigate("dashboard");
-              mobileProfile.onclick = app.auth.logout;
+              mobileProfile.onclick = () => app.auth.logout();
               mobileProfile.querySelector("span").innerText = "Logout";
               mobileProfile.querySelector("i").className = "ph ph-sign-out";
+
               if (user.role === "organizer") {
                 roleBtn.innerText = "Organizer Panel";
                 roleBtn.onclick = () => app.router.navigate("organizer");

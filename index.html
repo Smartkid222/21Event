@@ -309,6 +309,7 @@
       }
       .detail-img {
         width: 100%;
+        height: 700px; /* FIXED: Added height so image shows on mobile */
         border-radius: 24px;
         background-size: cover;
         background-position: center;
@@ -1614,7 +1615,18 @@
             preloader.style.opacity = "0";
             setTimeout(() => preloader.remove(), 500);
           }, 600);
-          app.router.navigate("home");
+
+          // NEW: Check for shared link parameters
+          const params = new URLSearchParams(window.location.search);
+          const eventId = params.get("eventId");
+
+          if (eventId) {
+            // If link has an ID, go straight to the event
+            app.router.navigate("event", eventId);
+          } else {
+            // Otherwise go home
+            app.router.navigate("home");
+          }
         },
         router: {
           navigate: async (viewName, params = null) => {
@@ -1985,6 +1997,7 @@
                 acc + e.tickets.reduce((a, t) => a + (t.sold || 0), 0),
               0,
             );
+
             container.innerHTML = `
               <div class="view active">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
@@ -2017,7 +2030,17 @@
                               0,
                             );
                             const isSoldOut = totalQty > 0 && sold >= totalQty;
-                            return `<tr><td><strong>${e.title}</strong>${isSoldOut ? '<span class="badge badge-sold" style="margin-left:8px;">Sold Out</span>' : '<span class="badge badge-open" style="margin-left:8px;">Active</span>'}</td><td>${new Date(e.date).toLocaleDateString("en-GB")}</td><td>${sold} / ${totalQty}</td><td style="white-space:nowrap;"><button class="btn btn-secondary btn-sm" onclick="app.handlers.editEvent('${e.id}')" style="margin-right:8px;">Edit</button><button class="btn btn-danger btn-sm" onclick="app.handlers.deleteEvent('${e.id}')">Delete</button></td></tr>`;
+                            return `<tr>
+                             <td><strong>${e.title}</strong>${isSoldOut ? '<span class="badge badge-sold" style="margin-left:8px;">Sold Out</span>' : '<span class="badge badge-open" style="margin-left:8px;">Active</span>'}</td>
+                             <td>${new Date(e.date).toLocaleDateString("en-GB")}</td>
+                             <td>${sold} / ${totalQty}</td>
+                             <td style="white-space:nowrap;">
+                                <!-- NEW: Share Button -->
+                                <button class="btn btn-secondary btn-sm" onclick="app.handlers.shareEventLink('${e.id}')" style="margin-right:8px;" title="Copy Event Link"><i class="ph ph-share-network"></i></button>
+                                <button class="btn btn-secondary btn-sm" onclick="app.handlers.editEvent('${e.id}')" style="margin-right:8px;">Edit</button>
+                                <button class="btn btn-danger btn-sm" onclick="app.handlers.deleteEvent('${e.id}')">Delete</button>
+                             </td>
+                          </tr>`;
                           })
                           .join("")}
                       </tbody>
@@ -2443,6 +2466,36 @@
               app.ui.closeModal("withdrawalModal");
               app.ui.showToast("Request Sent!");
               app.router.navigate("organizer");
+            }
+          },
+          shareEventLink: (id) => {
+            // Construct the URL with the eventId parameter
+            const url = `${window.location.origin}${window.location.pathname}?eventId=${id}`;
+
+            // Copy to clipboard
+            if (navigator.clipboard) {
+              navigator.clipboard
+                .writeText(url)
+                .then(() => {
+                  app.ui.showToast("Link copied to clipboard!");
+                })
+                .catch((err) => {
+                  console.error("Failed to copy: ", err);
+                  app.ui.showToast("Failed to copy link", "error");
+                });
+            } else {
+              // Fallback for older browsers
+              const textArea = document.createElement("textarea");
+              textArea.value = url;
+              document.body.appendChild(textArea);
+              textArea.select();
+              try {
+                document.execCommand("copy");
+                app.ui.showToast("Link copied to clipboard!");
+              } catch (err) {
+                app.ui.showToast("Failed to copy link", "error");
+              }
+              document.body.removeChild(textArea);
             }
           },
           openTicketDetail: (dataStr) => {
